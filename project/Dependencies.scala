@@ -4,7 +4,7 @@ object Dependencies {
   val SCALA_MAJOR_VERSION = "2.13"
   val SCALA_VERSION = s"$SCALA_MAJOR_VERSION.4"
 
-  val SOLR_VERSION = "8.3.1"
+  val SOLR_VERSION = "8.11.1"
   val PLAY_VERSION = "2.8.7"
 
   val CIRCE_VERSION = "0.12.0"
@@ -12,7 +12,7 @@ object Dependencies {
   val SWAGGER_ANNOTATIONS_VERSION = "1.5.22"
   val PLAY_SWAGGER_GEN_VERSION = "3.1.0"
 
-  val LOG4J_VERSION = "2.12.1"
+  val LOG4J_VERSION = "2.17.1"
   val SCALATEST_VERSION = "3.2.5"
   val SCALAMOCK_VERSION = "1.16.29"
   val SCALALOGGING_VERSION = "3.9.2"
@@ -29,6 +29,7 @@ object Dependencies {
   val TUKAANI_VERSION = "1.8"
   val CLASSGRAPH_VERSION = "4.8.102"
 
+  val CODEC_VERSION = "1.2"
   val SCAPEGOAT_VERSION = "1.3.11"
 
   val logging = "com.typesafe.scala-logging" %% "scala-logging" % SCALALOGGING_VERSION
@@ -60,6 +61,7 @@ object Dependencies {
   val scalaCompiler = "org.scala-lang" % "scala-compiler" % SCALA_VERSION
   val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % PARSER_COMBINATORS_VERSION
   val fastParse = "com.lihaoyi" %% "fastparse" % FASTPARSE_VERSION
+  val codec = "commons-codec" % "commons-codec" % CODEC_VERSION
   val solr = ("org.apache.solr" % "solr-core" % SOLR_VERSION
     excludeAll ("org.slf4j" %% "slf4j-api")
     excludeAll "org.apache.logging.log4j")
