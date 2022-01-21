@@ -154,12 +154,12 @@ lazy val `importer-isabelle` = project
 
 lazy val `importer-isabelle-build` = project
   .settings(
+    assemblySettings,
     publish / skip := true,
     isabelleCommand := "build_importer -C theorydata-" + schemaVersion,
-    isabelleProject := isabelle,
-    libraryDependencies ++= loggingBackend
+    isabelleProject := isabelle
   )
-  .dependsOn(`importer-isabelle`)
+  .aggregate(`importer-isabelle`)
   .enablePlugins(IsabelleToolPlugin)
 
 // Integration test to check integration between Isabelle dump and dump_importer
@@ -176,19 +176,13 @@ lazy val `importer-it` = project
       if (runImport.value) {
         val thyDir = (resourceDirectory in IntegrationTest).value.getPath
 
-        // Use temporary task directory for dump
-        val dumpDir = (taskTemporaryDirectory.value / "dump").getPath
-
         // Mount solr as resource - clean first
         val solrDir = (classDirectory in IntegrationTest).value / "solrdir"
         solrDir.delete()
         solrDir.mkdirs()
 
         // Run dump and dump_importer in Isabelle
-        (run in isabelle)
-          .toTask(" dump -A markup,theory -b HOL -D " + thyDir + " -O " + dumpDir)
-          .zip((run in `importer-isabelle`).toTask(" -l " + solrDir + " Spec-Tests " + dumpDir))
-          .flatMap { case (t1, t2) => t1 && t2 } && testTask
+        (run in `importer-isabelle-build`).toTask(" -l " + solrDir + " -d " + thyDir + " Spec-Tests ") && testTask
       } else {
         Def.task(testTask.value)
       }

@@ -28,6 +28,7 @@ object Build_Importer {
       var configset = Isabelle_System.getenv("SOLR_CONFIGSET")
       var local_solr = ""
       var remote_solr: List[String] = Nil
+      var dirs: List[Path] = Nil
 
       val getopts = Getopts(
         """
@@ -47,6 +48,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         "i:" -> (arg => index_name = arg),
         "C:" -> (arg => configset = arg),
         "l:" -> (arg => local_solr = arg),
+        "d:" -> (arg => dirs = Path.explode(arg) :: dirs),
         "r:" -> (arg => remote_solr = Library.distinct(space_explode(':', arg)))
       )
 
@@ -70,6 +72,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
           options,
           progress = progress,
           selection = Sessions.Selection(sessions = sessions),
+          dirs = dirs,
           export_files = true
         )
 
@@ -77,7 +80,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         sessions foreach { session_name =>
           val store = Sessions.store(options)
 
-          using(store.open_database(session_name, output = false)) { db =>
+          using(store.open_database(session_name)) { db =>
             val provider = Provider.database(db, XML.Cache.make(), session_name, "dummy")
             val theories = store.read_theories(db, session_name)
             Importer.import_session(index_name, provider, session_name, theories, importer_module, progress)
