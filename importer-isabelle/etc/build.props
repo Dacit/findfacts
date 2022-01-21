@@ -8,5 +8,7 @@ sources = \
   src/main/scala/de/qaware/findfacts/importer/markup_blocks.scala \
   src/main/scala/de/qaware/findfacts/importer/theory.scala \
   src/main/scala/de/qaware/findfacts/importer/tools.scala
+resources = \
+  src/main/resources/log4j2.properties
 services = \
   de.qaware.findfacts.importer.Tools

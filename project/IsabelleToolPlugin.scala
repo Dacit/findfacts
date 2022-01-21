@@ -20,6 +20,7 @@ object IsabelleToolPlugin extends AutoPlugin {
     Seq(
       compile / skip := true, // Skip actual compilation (since isabelle scripts will do that)
       Compile / doc := { file("") }, // Skip doc compilation
+      Compile / resources := { Seq.empty }, // Skip resource compilation
       run := {
         // Execute isabelle run config for custom tool
         Def.inputTaskDyn {
