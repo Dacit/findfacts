@@ -1,0 +1,17 @@
+title = Isabelle/JEdit Findfacts
+module = $FINDFACTS_JEDIT_JAR
+requirements = \
+  env:ISABELLE_SCALA_JAR \
+  env:JEDIT_JARS \
+  env:FINDFACTS_JEDIT_BASE_JAR \
+  env:FINDFACTS_IMPORTER_BASE_JAR \
+  env:FINDFACTS_IMPORTER_JAR
+sources = \
+  src/jedit_findfacts_plugin.scala \
+  src/findfacts_dockable.scala \
+  src/findfacts_plugin.scala \
+  src/findfacts_variable.scala
+resources = \
+  resources/log4j2.properties
+services = \
+  isabelle.jedit_findfacts.JEdit_Findfacts_Plugin

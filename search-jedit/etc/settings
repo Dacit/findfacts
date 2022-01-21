@@ -1,0 +1,7 @@
+# -*- shell-script -*- :mode=shellscript:
+
+FINDFACTS_HOME="$COMPONENT"
+FINDFACTS_JEDIT_BASE_JAR="$COMPONENT/lib/findfacts-jedit-base.jar"
+FINDFACTS_JEDIT_JAR="$COMPONENT/lib/findfacts.jar"
+
+classpath "$FINDFACTS_JEDIT_BASE_JAR"

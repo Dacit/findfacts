@@ -211,6 +211,19 @@ lazy val `search-core` = project
   )
   .dependsOn(`common-dt`, `common-da-solr`, `common-utils`, `common-dt` % "it->it")
 
+// jEdit integration
+lazy val `search-jedit` = project
+  .settings(
+    assemblySettings,
+    publish / skip := true,
+    isabelleCommand := "jedit",
+    isabelleProject := isabelle,
+    assembly / assemblyOutputPath := baseDirectory.value / "lib" / "findfacts-jedit-base.jar",
+  )
+  .aggregate(`importer-isabelle`)
+  .dependsOn(`search-core`)
+  .enablePlugins(IsabelleToolPlugin)
+
 // Play web application backend
 lazy val `search-webapp` = project
   .settings(
