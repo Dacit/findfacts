@@ -28,17 +28,46 @@ object Build_Importer {
       var configset = Isabelle_System.getenv("SOLR_CONFIGSET")
       var local_solr = ""
       var remote_solr: List[String] = Nil
+
+      var base_sessions: List[String] = Nil
+      var select_dirs: List[Path] = Nil
+      var numa_shuffling = false
+      var requirements = false
+      var soft_build = false
+      var exclude_session_groups: List[String] = Nil
+      var all_sessions = false
+      var clean_build = false
       var dirs: List[Path] = Nil
+      var export_files = false
+      var fresh_build = false
+      var session_groups: List[String] = Nil
+      var max_jobs = 1
+      var exclude_sessions: List[String] = Nil
 
       val getopts = Getopts(
         """
 Usage: isabelle build_importer [OPTIONS] SESSIONS...
 
-  Options are:
+  Importer options are:
     -i NAME         index NAME to import into
     -C NAME         Solr configset NAME
     -l SOLRDIR      local Solr repository at SOLRDIR
     -r HOST:PORT    remote Solr connection at HOST:PORT
+
+  Build options are:
+    -B NAME      include session NAME and all descendants
+    -D DIR       include session directory and select its sessions
+    -N           cyclic shuffling of NUMA CPU nodes (performance tuning)
+    -R           refer to requirements of selected sessions
+    -S           soft build: only observe changes of sources, not heap images
+    -X NAME      exclude sessions from group NAME and all descendants
+    -a           select all sessions
+    -c           clean build
+    -d DIR       include session directory
+    -f           fresh build
+    -g NAME      select session group NAME
+    -j INT       maximum number of parallel jobs (default 1)
+    -x NAME      exclude session NAME and all descendants
 
   Import Isabelle dump from DUMPDIR into Solr db. Only one Solr connection
   may be used. For remote connections, a configset must be set (either via
@@ -48,8 +77,20 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         "i:" -> (arg => index_name = arg),
         "C:" -> (arg => configset = arg),
         "l:" -> (arg => local_solr = arg),
-        "d:" -> (arg => dirs = Path.explode(arg) :: dirs),
-        "r:" -> (arg => remote_solr = Library.distinct(space_explode(':', arg)))
+        "r:" -> (arg => remote_solr = Library.distinct(space_explode(':', arg))),
+        "B:" -> (arg => base_sessions = base_sessions ::: List(arg)),
+        "D:" -> (arg => select_dirs = select_dirs ::: List(Path.explode(arg))),
+        "N" -> (_ => numa_shuffling = true),
+        "R" -> (_ => requirements = true),
+        "S" -> (_ => soft_build = true),
+        "X:" -> (arg => exclude_session_groups = exclude_session_groups ::: List(arg)),
+        "a" -> (_ => all_sessions = true),
+        "c" -> (_ => clean_build = true),
+        "d:" -> (arg => dirs = dirs ::: List(Path.explode(arg))),
+        "f" -> (_ => fresh_build = true),
+        "g:" -> (arg => session_groups = session_groups ::: List(arg)),
+        "j:" -> (arg => max_jobs = Value.Int.parse(arg)),
+        "x:" -> (arg => exclude_sessions = exclude_sessions ::: List(arg))
       )
 
       val sessions = getopts(args)
@@ -68,16 +109,29 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         val options = Options.init() + "export_theory"
 
         // Build
-        build(
+        val res = build(
           options,
+          selection = Sessions.Selection(
+            requirements = requirements,
+            all_sessions = all_sessions,
+            base_sessions = base_sessions,
+            exclude_session_groups = exclude_session_groups,
+            exclude_sessions = exclude_sessions,
+            session_groups = session_groups,
+            sessions = sessions),
           progress = progress,
-          selection = Sessions.Selection(sessions = sessions),
+          clean_build = clean_build,
           dirs = dirs,
+          select_dirs = select_dirs,
+          numa_shuffling = numa_shuffling,
+          max_jobs = max_jobs,
+          fresh_build = fresh_build,
+          soft_build = soft_build,
           export_files = true
         )
 
         // Import
-        sessions foreach { session_name =>
+        res.sessions foreach { session_name =>
           val store = Sessions.store(options)
 
           using(store.open_database(session_name)) { db =>
