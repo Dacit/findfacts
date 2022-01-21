@@ -1,13 +1,12 @@
-import com.typesafe.sbt.packager.Keys.stage
-import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 import sbt.Keys._
 import sbt._
 import sbt.complete.DefaultParsers._
-import sbt.io.IO
+import sbtassembly.AssemblyKeys.assembly
+import sbtassembly.AssemblyPlugin
 
 /** Plugin for sbt projects defining a tool as Isabelle component. */
 object IsabelleToolPlugin extends AutoPlugin {
-  override def requires: Plugins = JavaAppPackaging
+  override def requires: Plugins = AssemblyPlugin
 
   object autoImport {
     lazy val isabelleProject = settingKey[Project]("isabelle project")
@@ -19,23 +18,13 @@ object IsabelleToolPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Def.Setting[_]] =
     Seq(
-      stage := {
-        val deps = (stage.value ** "*.jar").get()
-        val toolClass = (mainClass in (Compile, run)).value
-
-        // Write settings file
-        val file = (target in Compile).value / "etc" / "settings"
-        val contents = deps.map(dep => "classpath \"" + dep.getAbsolutePath + "\"\n").mkString +
-          toolClass.map("isabelle_scala_service \"" + _ + "\"\n").getOrElse("")
-        IO.write(file, contents)
-
-        file
-      },
+      compile / skip := true, // Skip actual compilation (since isabelle scripts will do that)
+      Compile / doc := { file("") }, // Skip doc compilation
       run := {
         // Execute isabelle run config for custom tool
         Def.inputTaskDyn {
-          // Build tool assembly
-          stage.value
+          // build jar assembly
+          assembly.value
           // Parse tool args
           val args = spaceDelimited("<arg>").parsed
           // Run

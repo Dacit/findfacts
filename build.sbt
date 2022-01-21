@@ -28,10 +28,20 @@ ThisBuild / Test / parallelExecution := false
 ThisBuild / scalacOptions ++= Seq("-deprecation", "-feature")
 // Project-wide dependencies (intersection from all modules that can be run on their own)
 ThisBuild / libraryDependencies ++= scalaTests ++ Seq(logging, wire, enum, files)
-// Don't run tests in assembly
-ThisBuild / assembly / test := {}
 
 // Virtual sub-projects
+lazy val assemblySettings = Seq(
+  assembly / test := {},
+  assembly / assemblyMergeStrategy := {
+    case "module-info.class" => MergeStrategy.first
+    case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
+    case PathList("META-INF", "isabelle", xs @ _*) => MergeStrategy.discard
+    case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.first
+    case x =>
+      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      oldStrategy(x)
+  }
+)
 
 // Root project aggregates all
 lazy val findfacts = (project in file("."))
@@ -132,12 +142,14 @@ lazy val isabelle = project.enablePlugins(IsabellePlugin)
 // Importer Isabelle projects. Follows Isabelle conventions loosely.
 lazy val `importer-isabelle` = project
   .settings(
+    assemblySettings,
     publish / skip := true,
     isabelleCommand := "dump_importer -C theorydata-" + schemaVersion,
     isabelleProject := isabelle,
-    libraryDependencies ++= loggingBackend
+    libraryDependencies ++= loggingBackend,
+    assembly / assemblyOutputPath := baseDirectory.value / "lib" / "findfacts-importer-base.jar"
   )
-  .dependsOn(`importer-base`, `isabelle`)
+  .dependsOn(`importer-base`)
   .enablePlugins(IsabelleToolPlugin)
 
 lazy val `importer-isabelle-build` = project

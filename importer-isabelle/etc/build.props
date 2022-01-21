@@ -1,0 +1,12 @@
+title = Findfacts Importer
+module = $FINDFACTS_IMPORTER_JAR
+requirements = \
+  env:ISABELLE_SCALA_JAR \
+  $FINDFACTS_IMPORTER_BASE_JAR
+sources = \
+  src/main/scala/de/qaware/findfacts/importer/importer.scala \
+  src/main/scala/de/qaware/findfacts/importer/markup_blocks.scala \
+  src/main/scala/de/qaware/findfacts/importer/theory.scala \
+  src/main/scala/de/qaware/findfacts/importer/tools.scala
+services = \
+  de.qaware.findfacts.importer.Tools

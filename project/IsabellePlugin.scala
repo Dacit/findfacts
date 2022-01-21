@@ -25,20 +25,6 @@ object IsabellePlugin extends AutoPlugin {
     scalaSource in Compile := baseDirectory.value / "src", // Register sources for IDE support
     compile / skip := true, // Skip actual compilation (since isabelle scripts will do that)
     Compile / doc := { file("") }, // Skip doc compilation
-    libraryDependencies += "org.tukaani" % "xz" % "1.8", // Pure compile-time deps
-    unmanagedJars in Compile ++= {
-      // Build and Register pure jar
-      val isabelleExecutable = baseDirectory.value / "bin" / "isabelle"
-      val projectDir = baseDirectory.value / ".."
-      val logger = streams.value.log
-
-      // Get components and build jars
-      runIsabelle(isabelleExecutable, projectDir, Seq("components", "-a"), logger)
-      runIsabelle(isabelleExecutable, projectDir, Seq("jedit", "-b"), logger)
-
-      // Return jar
-      (baseDirectory.value / "lib" / "classes" ** "*.jar").get()
-    },
     run := {
       val isabelleExecutable = baseDirectory.value / "bin" / "isabelle"
       val projectDir = baseDirectory.value / ".."
@@ -49,6 +35,7 @@ object IsabellePlugin extends AutoPlugin {
       logger.info("Running isabelle " + args.mkString(" "))
 
       // Run
+      runIsabelle(isabelleExecutable, projectDir, List("components", "-a"), logger)
       runIsabelle(isabelleExecutable, projectDir, args, logger)
     }
   )

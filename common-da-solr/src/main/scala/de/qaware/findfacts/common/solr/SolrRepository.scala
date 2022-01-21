@@ -102,7 +102,9 @@ final class LocalSolr private (
       }
     }
 
-  override def listIndexes: List[String] = home.children.filter(_.isDirectory).map(_.name).toList
+  override def listIndexes: List[String] = {
+    home.children.filter(_.isDirectory).filter(dir => (dir / "conf" / "core.properties").exists).map(_.name).toList
+  }
 
   override def close(): Unit = server.close()
 }
