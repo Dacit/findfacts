@@ -15,6 +15,15 @@ Project to make Isabelle and the AFP easily searchable. Structured in:
 - Build: `./sbt -Dprofiles=ui,loader clean compile test it:test`
 - Preparation: Initialize git submodules (`git submodule init && git submodule update`)
 
+### Synonyms tool
+```shell
+./sbt "project symbol-synonyms-tool" "run <OPTIONS>"
+```
+Example invocation:
+```shell
+./sbt "project symbol-synonyms-tool" "run -o common-dt/src/main/resources/solr/conf/synonyms.txt isabelle/etc/symbols"
+```
+
 ### Importer tool
 Generally:
 ```shell
