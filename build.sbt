@@ -147,7 +147,7 @@ lazy val `importer-isabelle` = project
     isabelleCommand := "dump_importer -C theorydata-" + schemaVersion,
     isabelleProject := isabelle,
     libraryDependencies ++= loggingBackend,
-    assembly / assemblyOutputPath := baseDirectory.value / "lib" / "findfacts-importer-base.jar"
+    assembly / assemblyOutputPath := baseDirectory.value / "isa-lib" / "findfacts-importer-base.jar"
   )
   .dependsOn(`importer-base`)
   .enablePlugins(IsabelleToolPlugin)
@@ -212,7 +212,7 @@ lazy val `search-jedit` = project
     publish / skip := true,
     isabelleCommand := "jedit",
     isabelleProject := isabelle,
-    assembly / assemblyOutputPath := baseDirectory.value / "lib" / "findfacts-jedit-base.jar",
+    assembly / assemblyOutputPath := baseDirectory.value / "isa-lib" / "findfacts-jedit-base.jar",
   )
   .aggregate(`importer-isabelle`)
   .dependsOn(`search-core`)

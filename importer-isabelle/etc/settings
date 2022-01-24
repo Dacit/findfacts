@@ -1,6 +1,6 @@
 # -*- shell-script -*- :mode=shellscript:
 
-FINDFACTS_IMPORTER_BASE_JAR="$COMPONENT/lib/findfacts-importer-base.jar"
-FINDFACTS_IMPORTER_JAR="$COMPONENT/lib/findfacts-importer.jar"
+FINDFACTS_IMPORTER_BASE_JAR="$COMPONENT/isa-lib/findfacts-importer-base.jar"
+FINDFACTS_IMPORTER_JAR="$COMPONENT/isa-lib/findfacts-importer.jar"
 
 classpath "$FINDFACTS_IMPORTER_BASE_JAR"
