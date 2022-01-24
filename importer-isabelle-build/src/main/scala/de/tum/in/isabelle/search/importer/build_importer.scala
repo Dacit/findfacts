@@ -24,10 +24,13 @@ object Build_Importer {
     args => {
       /* arguments */
 
+      val build_options = Word.explode(Isabelle_System.getenv("ISABELLE_BUILD_OPTIONS"))
+
       var index_name = "theorydata"
       var configset = Isabelle_System.getenv("SOLR_CONFIGSET")
       var local_solr = ""
       var remote_solr: List[String] = Nil
+      var verbose = false
 
       var base_sessions: List[String] = Nil
       var select_dirs: List[Path] = Nil
@@ -42,6 +45,7 @@ object Build_Importer {
       var fresh_build = false
       var session_groups: List[String] = Nil
       var max_jobs = 1
+      var options = Options.init(opts = build_options) + "export_theory"
       var exclude_sessions: List[String] = Nil
 
       val getopts = Getopts(
@@ -53,6 +57,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
     -C NAME         Solr configset NAME
     -l SOLRDIR      local Solr repository at SOLRDIR
     -r HOST:PORT    remote Solr connection at HOST:PORT
+    -v              verbose
 
   Build options are:
     -B NAME      include session NAME and all descendants
@@ -67,6 +72,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
     -f           fresh build
     -g NAME      select session group NAME
     -j INT       maximum number of parallel jobs (default 1)
+    -o OPTION    override Isabelle system OPTION (via NAME=VAL or NAME)
     -x NAME      exclude session NAME and all descendants
 
   Import Isabelle dump from DUMPDIR into Solr db. Only one Solr connection
@@ -78,6 +84,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         "C:" -> (arg => configset = arg),
         "l:" -> (arg => local_solr = arg),
         "r:" -> (arg => remote_solr = Library.distinct(space_explode(':', arg))),
+        "v" -> (_ => verbose = true),
         "B:" -> (arg => base_sessions = base_sessions ::: List(arg)),
         "D:" -> (arg => select_dirs = select_dirs ::: List(Path.explode(arg))),
         "N" -> (_ => numa_shuffling = true),
@@ -90,6 +97,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         "f" -> (_ => fresh_build = true),
         "g:" -> (arg => session_groups = session_groups ::: List(arg)),
         "j:" -> (arg => max_jobs = Value.Int.parse(arg)),
+        "o:" -> (arg => options = options + arg),
         "x:" -> (arg => exclude_sessions = exclude_sessions ::: List(arg))
       )
 
@@ -106,19 +114,20 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         val importer_module = new SolrImporterModule(solr_repository)
 
         val progress = new Console_Progress()
-        val options = Options.init() + "export_theory"
+
+        val selection = Sessions.Selection(
+          requirements = requirements,
+          all_sessions = all_sessions,
+          base_sessions = base_sessions,
+          exclude_session_groups = exclude_session_groups,
+          exclude_sessions = exclude_sessions,
+          session_groups = session_groups,
+          sessions = sessions)
 
         // Build
         val res = build(
           options,
-          selection = Sessions.Selection(
-            requirements = requirements,
-            all_sessions = all_sessions,
-            base_sessions = base_sessions,
-            exclude_session_groups = exclude_session_groups,
-            exclude_sessions = exclude_sessions,
-            session_groups = session_groups,
-            sessions = sessions),
+          selection = selection,
           progress = progress,
           clean_build = clean_build,
           dirs = dirs,
@@ -130,14 +139,19 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
           export_files = true
         )
 
+        if (!res.ok) error("Build failed")
+
+        val selected_sessions = Sessions.load_structure(options, dirs = dirs, select_dirs = select_dirs)
+          .imports_selection(selection)
+
         // Import
-        res.sessions foreach { session_name =>
+        selected_sessions foreach { session_name =>
           val store = Sessions.store(options)
 
           using(store.open_database(session_name)) { db =>
             val provider = Provider.database(db, XML.Cache.make(), session_name, "dummy")
             val theories = store.read_theories(db, session_name)
-            Importer.import_session(index_name, provider, session_name, theories, importer_module, progress)
+            Importer.import_session(index_name, provider, session_name, theories, importer_module, progress, verbose)
           }
         }
       }

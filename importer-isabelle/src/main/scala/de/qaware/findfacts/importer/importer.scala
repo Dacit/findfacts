@@ -34,10 +34,12 @@ object Importer {
       session_name: String,
       theory_names: List[String],
       importer: ImporterModule,
-      progress: Progress = new Progress): Unit = {
+      progress: Progress = new Progress,
+      verbose: Boolean = false): Unit = {
     progress.echo("importing " + session_name + " with " + theory_names.size + " theories...")
 
     val theories = theory_names map { theory_name =>
+      progress.echo_if(verbose, "loading theory " + theory_name + "...")
       val theory_provider = provider.focus(theory_name)
 
       val isabelle_theory = Export_Theory.read_theory(theory_provider, session_name, theory_name)
@@ -50,6 +52,7 @@ object Importer {
       map_theory(session_name, isabelle_theory, markup_blocks)
     }
 
+    progress.echo_if(verbose, "finished loading theories, importing...")
     val errors = importer.importSession(index_name, theories)
 
     errors foreach { error =>
