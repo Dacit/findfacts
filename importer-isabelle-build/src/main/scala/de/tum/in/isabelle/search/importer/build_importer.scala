@@ -11,7 +11,7 @@ import de.qaware.findfacts.importer.Importer
 import de.qaware.findfacts.importer.solrimpl.SolrImporterModule
 import isabelle.Build.build
 import isabelle.Export.Provider
-import isabelle._
+import isabelle.{Sessions, _}
 
 object Build_Importer {
 
@@ -141,16 +141,20 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
 
         if (!res.ok) error("Build failed")
 
-        val selected_sessions = Sessions.load_structure(options, dirs = dirs, select_dirs = select_dirs)
-          .imports_selection(selection)
+        val structure = Sessions.load_structure(options, dirs = dirs, select_dirs = select_dirs)
+        val selected_sessions = structure.build_selection(selection)
+
+        val deps = Sessions.deps(structure.selection(selection))
 
         // Import
         selected_sessions foreach { session_name =>
+          progress.echo("Importing session " + session_name)
+
           val store = Sessions.store(options)
 
           using(store.open_database(session_name)) { db =>
             val provider = Provider.database(db, XML.Cache.make(), session_name, "dummy")
-            val theories = store.read_theories(db, session_name)
+            val theories = deps.get(session_name).get.session_theories.map(_.theory)
             Importer.import_session(index_name, provider, session_name, theories, importer_module, progress, verbose)
           }
         }

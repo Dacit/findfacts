@@ -24,7 +24,7 @@ Example invocation:
 ./sbt "project symbol-synonyms-tool" "run -o common-dt/src/main/resources/solr/conf/synonyms.txt isabelle/etc/symbols"
 ```
 
-### Importer tool
+### Importer tool (dump)
 Generally:
 ```shell
 ./sbt "project importer-isabelle" "run <OPTIONS>"
@@ -35,6 +35,16 @@ Example invocation:
 ./sbt "project importer-isabelle" "run -r localhost:8983 -i 2021_Isabelle2021_AFP2021 -a dump/" 
 ``` 
 [Isabelle settings](.isabelle/etc/settings): Increase memory a bit: `-Xss16m` `-Xmx8g`
+
+### Importer tool (build)
+Generally:
+```shell
+isabelle build_importer -?
+```
+Example invocation (using isabelle):
+```shell
+isabelle build_importer -C theorydata-0.3.1 -d '$AFP' -r localhost:8983 -i 2021-1_Isabelle2021-1_AFP2021-1 -a
+``` 
 
 ### Search webapp
 Run:
