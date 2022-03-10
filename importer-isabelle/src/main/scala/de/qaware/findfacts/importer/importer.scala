@@ -42,7 +42,7 @@ object Importer {
       progress.echo_if(verbose, "loading theory " + theory_name + "...")
       val theory_provider = provider.focus(theory_name)
 
-      Export_Theory.read_theory_parents(provider, theory_name) match {
+      Export_Theory.read_theory_parents(theory_provider, theory_name) match {
         case None =>
           progress.echo_warning("No theory exports for theory " + theory_name)
           None
