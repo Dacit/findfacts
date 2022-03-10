@@ -9,9 +9,7 @@ package de.tum.in.isabelle.search.importer
 import de.qaware.findfacts.common.solr.{LocalSolr, RemoteSolr}
 import de.qaware.findfacts.importer.Importer
 import de.qaware.findfacts.importer.solrimpl.SolrImporterModule
-import isabelle.Build.build
-import isabelle.Export.Provider
-import isabelle.{Sessions, _}
+import isabelle._
 
 object Build_Importer {
 
@@ -45,7 +43,7 @@ object Build_Importer {
       var fresh_build = false
       var session_groups: List[String] = Nil
       var max_jobs = 1
-      var options = Options.init(opts = build_options) + "export_theory"
+      var options = Options.init(opts = build_options)
       var exclude_sessions: List[String] = Nil
 
       val getopts = Getopts(
@@ -101,6 +99,8 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         "x:" -> (arg => exclude_sessions = exclude_sessions ::: List(arg))
       )
 
+      options = options + ("export_theory", "true")
+
       val sessions = getopts(args)
 
       val solr_repository = (local_solr, remote_solr) match {
@@ -125,7 +125,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
           sessions = sessions)
 
         // Build
-        val res = build(
+        val res = Build.build(
           options,
           selection = selection,
           progress = progress,
@@ -135,29 +135,29 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
           numa_shuffling = numa_shuffling,
           max_jobs = max_jobs,
           fresh_build = fresh_build,
-          soft_build = soft_build,
-          export_files = true
-        )
+          soft_build = soft_build)
 
         if (!res.ok) error("Build failed")
 
-        val structure = Sessions.load_structure(options, dirs = dirs, select_dirs = select_dirs)
-        val selected_sessions = structure.build_selection(selection)
+        val full_sessions = Sessions.load_structure(options, dirs = dirs, select_dirs = select_dirs)
 
-        val deps = Sessions.deps(structure.selection(selection))
+        val sessions_structure = full_sessions.selection(selection)
+        val deps = Sessions.deps(sessions_structure)
+
+        val store = Sessions.store(options)
+        val cache = XML.Cache.make()
 
         // Import
-        selected_sessions foreach { session_name =>
+        sessions_structure.build_selection(selection).map(session_name => Future.fork {
           progress.echo("Importing session " + session_name)
 
-          val store = Sessions.store(options)
-
           using(store.open_database(session_name)) { db =>
-            val provider = Provider.database(db, XML.Cache.make(), session_name, "dummy")
-            val theories = deps.get(session_name).get.session_theories.map(_.theory)
+            val provider = Export.Provider.database(db, cache, session_name, "dummy")
+            val base = deps.get(session_name).getOrElse(error("No base for " + session_name))
+            val theories = base.session_theories.map(_.theory)
             Importer.import_session(index_name, provider, session_name, theories, importer_module, progress, verbose)
           }
-        }
+        }).foreach(_.join)
       }
     }
   )

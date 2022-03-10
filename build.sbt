@@ -182,7 +182,7 @@ lazy val `importer-it` = project
         solrDir.mkdirs()
 
         // Run dump and dump_importer in Isabelle
-        (run in `importer-isabelle-build`).toTask(" -v -l " + solrDir + " -d " + thyDir + " Spec-Tests ") && testTask
+        (run in `importer-isabelle-build`).toTask(" -c -v -l " + solrDir + " -d " + thyDir + " Spec-Tests ") && testTask
       } else {
         Def.task(testTask.value)
       }

@@ -187,8 +187,8 @@ object Theory
 
   class Position_Wrapper(val inner: isabelle.Position.T) extends AnyVal with TheoryView.Position
   {
-    override def offset: Int = Properties.get(inner, Markup.OFFSET).get.toInt
-    override def endOffset: Int = Properties.get(inner, Markup.END_OFFSET).get.toInt
+    override def offset: Int = Properties.get(inner, Markup.OFFSET).getOrElse(error("Position missing")).toInt
+    override def endOffset: Int = Properties.get(inner, Markup.END_OFFSET).getOrElse(error("Position missing")).toInt
   }
 
   class Entity_Wrapper[A <: Export_Theory.Content[A]](val inner: Export_Theory.Entity[A]) extends AnyVal with TheoryView.Entity
@@ -200,30 +200,30 @@ object Theory
   class Type_Wrapper(val inner: Export_Theory.Entity[Export_Theory.Type]) extends AnyVal with TheoryView.Type
   {
     override def entity: TheoryView.Entity = new Entity_Wrapper(inner)
-    override def args: List[String] = inner.content.get.args
-    override def abbrev: Option[TheoryView.Typ] = inner.content.get.abbrev.map(map_typ)
+    override def args: List[String] = inner.content.getOrElse(error("Exports missing")).args
+    override def abbrev: Option[TheoryView.Typ] = inner.content.getOrElse(error("Exports missing")).abbrev.map(map_typ)
   }
 
   class Const_Wrapper(val inner: Export_Theory.Entity[Export_Theory.Const]) extends AnyVal with TheoryView.Const
   {
     override def entity: TheoryView.Entity = new Entity_Wrapper(inner)
-    override def typargs: List[String] = inner.content.get.typargs
-    override def typ: TheoryView.Typ = map_typ(inner.content.get.typ)
+    override def typargs: List[String] = inner.content.getOrElse(error("Exports missing")).typargs
+    override def typ: TheoryView.Typ = map_typ(inner.content.getOrElse(error("Exports missing")).typ)
     override def abbrev: Option[TheoryView.Term] = inner.content.flatMap(_.abbrev).map(map_term)
   }
 
   class Axiom_Wrapper(val inner: Export_Theory.Entity[Export_Theory.Axiom]) extends AnyVal with TheoryView.Axiom
   {
     override def entity: TheoryView.Entity = new Entity_Wrapper(inner)
-    override def prop: TheoryView.Prop = new Prop_Wrapper(inner.content.get.prop)
+    override def prop: TheoryView.Prop = new Prop_Wrapper(inner.content.getOrElse(error("Exports missing")).prop)
   }
 
   class Thm_Wrapper(val inner: Export_Theory.Entity[Export_Theory.Thm]) extends AnyVal with TheoryView.Thm
   {
     override def entity: TheoryView.Entity = new Entity_Wrapper(inner)
-    override def prop: TheoryView.Prop = new Prop_Wrapper(inner.content.get.prop)
-    override def deps: List[String] = inner.content.get.deps
-    override def proof: TheoryView.Proof = map_proof(inner.content.get.proof)
+    override def prop: TheoryView.Prop = new Prop_Wrapper(inner.content.getOrElse(error("Exports missing")).prop)
+    override def deps: List[String] = inner.content.getOrElse(error("Exports missing")).deps
+    override def proof: TheoryView.Proof = map_proof(inner.content.getOrElse(error("Exports missing")).proof)
   }
 
   class Constdef_Wrapper(val inner: Export_Theory.Constdef) extends AnyVal with TheoryView.Constdef
