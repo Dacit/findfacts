@@ -148,7 +148,8 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         val cache = XML.Cache.make()
 
         // Import
-        sessions_structure.build_selection(selection).map(session_name => Future.fork {
+        val session_names = sessions_structure.build_selection(selection).filter(_ != "Pure")
+        session_names.map(session_name => Future.fork {
           progress.echo("Importing session " + session_name)
 
           using(store.open_database(session_name)) { db =>
