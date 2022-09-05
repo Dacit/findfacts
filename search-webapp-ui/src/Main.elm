@@ -393,7 +393,7 @@ routeParser model =
                         (UrlQueryParser.string "page")
             )
         , UrlParser.map (parseDetails model) (UrlParser.s "details" </> UrlParser.string </> UrlParser.string)
-        , UrlParser.map (parseTheory model) (UrlParser.s "theory" </> UrlParser.string </> UrlParser.string)
+        , UrlParser.map (parseTheory model) (UrlParser.s "theory" </> UrlParser.string </> UrlParser.string </> UrlParser.string)
         , UrlParser.map ( Feedback <| Obfuscated.init email, Cmd.none ) (UrlParser.s "feedback")
         , UrlParser.map ( Help, Cmd.none ) (UrlParser.s "help")
         , UrlParser.map ( Examples, Cmd.none ) (UrlParser.s "examples")
@@ -525,11 +525,11 @@ parseDetails model indexEnc idEnc =
 
 {-| Parses the url for the 'theory' page, and executes query.
 -}
-parseTheory : Model -> String -> String -> ( Page, Cmd Msg )
-parseTheory model indexEnc nameEnc =
-    case ( Url.percentDecode indexEnc, Url.percentDecode nameEnc ) of
-        ( Just index, Just name ) ->
-            ( Theory { index = index, state = Theory.empty name }
+parseTheory : Model -> String -> String -> String -> ( Page, Cmd Msg )
+parseTheory model indexEnc sessionEnc nameEnc =
+    case ( Url.percentDecode indexEnc, Url.percentDecode sessionEnc, Url.percentDecode nameEnc ) of
+        ( Just index, Just session, Just name ) ->
+            ( Theory { index = index, state = Theory.empty session name }
             , executeFilterQuery model.apiBaseUrl index <| FilterQuery [ FieldFilter SrcFile <| Exact name ] 10000 Nothing
             )
 

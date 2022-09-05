@@ -54,6 +54,7 @@ type State
 
 type alias StateInternal =
     { status : Status
+    , session: String
     , theory : String
     }
 
@@ -66,9 +67,9 @@ type Status
 
 {-| Creates an initial state.
 -}
-empty : String -> State
-empty theory =
-    State <| StateInternal Searching theory
+empty : String -> String -> State
+empty session theory =
+    State <| StateInternal Searching session theory
 
 
 {-| Updates the state with results.
@@ -88,7 +89,7 @@ update result (State state) =
 view : State -> Config msg -> Html msg
 view (State state) (Config conf) =
     div [ style "display" "inline-block" ]
-        (h1 [ Typography.headline4 ] [ text state.theory ]
+        (h1 [ Typography.headline4 ] [ text <| state.session ++ "." ++ state.theory ]
             :: (case state.status of
                     Searching ->
                         [ Progress.indeterminateLinearProgress Progress.linearProgressConfig ]

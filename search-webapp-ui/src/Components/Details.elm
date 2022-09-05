@@ -168,11 +168,12 @@ view state (Config conf) =
                             UrlBuilder.relative
                                 [ "#theory"
                                 , Url.percentEncode conf.index
-                                , Url.percentEncode stateInternal.block.file
+                                , Url.percentEncode stateInternal.block.session
+                                , Url.percentEncode stateInternal.block.theory
                                 ]
                                 []
                         ]
-                        [ text stateInternal.block.file ]
+                        [ text (stateInternal.block.session ++ "." ++ stateInternal.block.theory) ]
                     ]
                  , div
                     [ Elevation.z2

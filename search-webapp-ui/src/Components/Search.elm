@@ -67,6 +67,7 @@ facetFields : AnyDict String Field NamedField
 facetFields =
     AnyDict.fromList fieldToString
         [ ( Command, "Command" )
+        , ( SessionFacet, "Session" )
         , ( SrcFileFacet, "Source Theory" )
         , ( Kind, "Entity Kind" )
         , ( ConstTypeFacet, "Type" )
@@ -86,6 +87,7 @@ termFilterableFields =
     AnyDict.fromList fieldToString
         [ ( Command, FilterField "Isabelle Command" <| Just Command )
         , ( Src, FilterField "Source Code" Nothing )
+        , ( Session, FilterField "Session" <| Just SessionFacet )
         , ( SrcFile, FilterField "Source Theory" <| Just SrcFileFacet )
         , ( Name, FilterField "Semantic Entity Name" <| Just NameFacet )
         , ( ConstType, FilterField "Constant Type" <| Just ConstTypeFacet )

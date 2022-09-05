@@ -10,6 +10,7 @@ import Dict exposing (Dict)
 import Dict.Any exposing (AnyDict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value, object)
+import Json.Decode.Extra exposing (andMap)
 import Maybe.Extra
 import Util exposing (anyDictDecoder, resultStringDecoder)
 
@@ -23,7 +24,8 @@ type alias ResultList a =
 
 type alias ShortBlock =
     { id : String
-    , file : String
+    , session: String
+    , theory : String
     , command : String
     , startLine : Int
     , srcBefore : String
@@ -78,6 +80,8 @@ type alias TypeEt =
 type Field
     = Id
     | ChildId
+    | Session
+    | SessionFacet
     | SrcFile
     | SrcFileFacet
     | Command
@@ -157,6 +161,12 @@ fieldToString field =
         ChildId ->
             "ChildId"
 
+        Session ->
+            "Session"
+
+        SessionFacet ->
+            "SessionFacet"
+
         SrcFile ->
             "SourceTheory"
 
@@ -209,6 +219,12 @@ fieldFromString str =
 
         "ChildId" ->
             Ok ChildId
+
+        "Session" ->
+            Ok Session
+
+        "SessionFacet" ->
+            Ok SessionFacet
 
         "SourceTheory" ->
             Ok SrcFile
@@ -360,15 +376,16 @@ kindDecoder =
 
 shortBlockDecoder : Decoder ShortBlock
 shortBlockDecoder =
-    Decode.map8 ShortBlock
-        (Decode.field "id" Decode.string)
-        (Decode.field "theory" Decode.string)
-        (Decode.field "command" Decode.string)
-        (Decode.field "startLine" Decode.int)
-        (Decode.field "srcBefore" Decode.string)
-        (Decode.field "src" Decode.string)
-        (Decode.field "srcAfter" Decode.string)
-        (Decode.field "entities" (Decode.list shortEtDecoder))
+    Decode.succeed ShortBlock
+      |> andMap (Decode.field "id" Decode.string)
+      |> andMap (Decode.field "session" Decode.string)
+      |> andMap (Decode.field "theory" Decode.string)
+      |> andMap (Decode.field "command" Decode.string)
+      |> andMap (Decode.field "startLine" Decode.int)
+      |> andMap (Decode.field "srcBefore" Decode.string)
+      |> andMap (Decode.field "src" Decode.string)
+      |> andMap (Decode.field "srcAfter" Decode.string)
+      |> andMap (Decode.field "entities" (Decode.list shortEtDecoder))
 
 
 shortEtDecoder : Decoder ShortEt
