@@ -45,7 +45,7 @@ class JoinBlockEntitiesStep(idBuilder: IdBuilder) extends ImportStep {
         // Find block in source and get corresponding code-block
         val block = theory.source
           .get(pos)
-          .flatMap(src => blocksMap.get(idBuilder.blockId(theory.name, src.startPos, src.endPos)))
+          .flatMap(src => blocksMap.get(idBuilder.blockId(theory.session, theory.name, src.startPos, src.endPos)))
 
         // Update block with the new entities
         block match {

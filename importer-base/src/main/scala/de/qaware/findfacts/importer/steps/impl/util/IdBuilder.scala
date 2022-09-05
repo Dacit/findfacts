@@ -10,12 +10,13 @@ final class IdBuilder {
   /**
    * Creates an unique id for a code-block.
    *
+   * @param session the block is in
    * @param theory the block is in
    * @param startPos the position of the first character in the block
    * @param endPos the position after the last character in the block
    * @return unique id
    */
-  def blockId(theory: String, startPos: Int, endPos: Int): String = s"$theory.$startPos.$endPos"
+  def blockId(session: String, theory: String, startPos: Int, endPos: Int): String = s"$session.$theory.$startPos.$endPos"
 
   /**
    * Creates an unique id for a given theory entity.

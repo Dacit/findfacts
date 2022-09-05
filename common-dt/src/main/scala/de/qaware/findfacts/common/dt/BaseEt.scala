@@ -46,6 +46,7 @@ sealed trait TheoryEt extends BaseEt {
  */
 final case class CodeblockEt(
     override val id: Id.T,
+    session: Session.T,
     theory: SourceTheory.T,
     startLine: StartLine.T,
     command: Command.T,

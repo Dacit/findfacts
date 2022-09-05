@@ -263,7 +263,7 @@ object Theory
 
     new TheoryView.Theory
     {
-      override val name: String = isabelle_theory.name
+      override val name: String = Long_Name.base_name(isabelle_theory.name)
       override val session: String = session_name
       override val source: Source = new Source_Wrapper(markup_Blocks)
       override val types: List[TheoryView.Type] = isabelle_theory.types.map(new Type_Wrapper(_))

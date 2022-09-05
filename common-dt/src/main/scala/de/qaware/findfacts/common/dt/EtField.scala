@@ -84,6 +84,18 @@ object EtField extends DefaultEnum[EtField] {
     override val implicits: FieldImplicits[String] = FieldImplicits()
   }
 
+  /** Session containing the entity */
+  case object Session extends SingleValuedField[String] with ParentField {
+    override final val name = SolrSchema.Session
+    override val implicits: FieldImplicits[String] = FieldImplicits()
+  }
+
+  /** Facetable field for session */
+  case object SessionFacet extends SingleValuedField[String] with ParentField {
+    override final val name = SolrSchema.SessionFacet
+    override val implicits: FieldImplicits[String] = FieldImplicits()
+  }
+
   /** Source theory file containing the entity. */
   case object SourceTheory extends SingleValuedField[String] with ParentField {
     override final val name = SolrSchema.SourceTheory

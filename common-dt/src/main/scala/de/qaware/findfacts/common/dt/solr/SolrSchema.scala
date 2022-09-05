@@ -7,6 +7,8 @@ object SolrSchema {
   final val ParentFlag = "parent_flag"
   final val TheoryKind = "kind"
   final val Command = "command"
+  final val Session = "session"
+  final val SessionFacet = "session_facet"
   final val SourceTheory = "theory"
   final val SourceTheoryFacet = "theory_facet"
   final val StartLine = "start_line"

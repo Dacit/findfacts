@@ -29,7 +29,8 @@ class ExtractBlocksStep(idBuilder: IdBuilder) extends ImportStep {
 
         val block =
           CodeblockEt(
-            idBuilder.blockId(theory.name, src.startPos, src.endPos),
+            idBuilder.blockId(theory.session, theory.name, src.startPos, src.endPos),
+            theory.session,
             theory.name,
             src.startLine,
             cmdKind,

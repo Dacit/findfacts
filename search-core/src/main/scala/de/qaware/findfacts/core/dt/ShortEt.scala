@@ -24,6 +24,7 @@ case object ShortChildren extends Children[ShortThyEt] {
  */
 final case class ShortBlock(
     id: Id.T,
+    session: Session.T,
     theory: SourceTheory.T,
     startLine: StartLine.T,
     srcBefore: SourceCodeBefore.T,

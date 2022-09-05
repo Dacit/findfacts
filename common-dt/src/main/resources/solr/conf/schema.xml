@@ -5,8 +5,10 @@
         <field name="id" type="string" required="true" docValues="false" uninvertible="true" multiValued="false"/>
         <field name="doc_kind" type="string" docValues="true" multiValued="false" required="true"/>
         <field name="command" type="string" docValues="true" multiValued="false"/>
+        <field name="session" type="name_text" multiValued="false"/>
         <field name="theory" type="name_text" multiValued="false"/>
         <field name="kind" type="string" docValues="true" multiValued="false"/>
+        <field name="session_facet" type="string" docValues="true" multiValued="false"/>
         <field name="theory_facet" type="string" docValues="true" multiValued="false"/>
         <field name="start_line" type="pint" multiValued="false"/>
         <field name="name" type="name_text" multiValued="false"/>
@@ -20,6 +22,7 @@
         <field name="_version_" type="plong" indexed="false" stored="false" multiValued="false"/>
     </fields>
 
+    <copyField source="session" dest="session_facet" maxChars="3276"/>
     <copyField source="theory" dest="theory_facet" maxChars="3276"/>
     <copyField source="name" dest="name_facet" maxChars="3276"/>
     <copyField source="type" dest="type_facet" maxChars="3276"/>

@@ -8,7 +8,8 @@ value "''test''"
     ctx.src should equal("value \"''test''\"\n")
     ctx.startLine should be(ctx.block.startLine)
 
-    ctx.block.theory should equal("Spec-Tests.Executor_Test_Spec")
+    ctx.block.session should equal("Spec-Tests")
+    ctx.block.theory should equal("Executor_Test_Spec")
     ctx.block.src should equal("value \"''test''\"\n")
     ctx.block.command should equal("value")
     ctx.block.entities should be(empty)
