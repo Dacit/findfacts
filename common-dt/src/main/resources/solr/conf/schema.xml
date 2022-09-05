@@ -40,6 +40,8 @@
                 <tokenizer class="solr.PatternTokenizerFactory"
                            pattern="\s*([\(\)\{\},⇒]|::|([^\(\)\{\},⇒\s:]|:[^\(\)\{\},⇒\s:])+)\s*"
                            group="1"/>
+                <!-- lower-case everything -->
+                <filter class="solr.LowerCaseFilterFactory"/>
                 <!-- Add non-ascii string representations -->
                 <filter class="solr.ASCIIFoldingFilterFactory" preserveOriginal="true"/>
                 <!-- Split names -->
@@ -49,8 +51,6 @@
                         catenateAll="0" splitOnCaseChange="0"
                         stemEnglishPossessive="0" preserveOriginal="1"/>
                 <filter class="solr.FlattenGraphFilterFactory"/>
-                <!-- lower-case everything -->
-                <filter class="solr.LowerCaseFilterFactory"/>
             </analyzer>
             <analyzer type="query">
                 <!-- Break type down into type tokens -->
@@ -69,6 +69,8 @@
                 <tokenizer class="solr.PatternTokenizerFactory"
                            pattern="\s*(::|[\(\)\{\}\[\]\.,:&quot;]|[^\p{ASCII}]|((?![^\p{ASCII}])[^\(\)\{\}\[\]\.,:&quot;\s])+)\s*"
                            group="1"/>
+                <!-- lower-case everything -->
+                <filter class="solr.LowerCaseFilterFactory"/>
                 <!-- Add string representations of non-ascii characters -->
                 <filter class="solr.ASCIIFoldingFilterFactory" preserveOriginal="true"/>
                 <!-- Add words from tokens as well -->
@@ -78,8 +80,6 @@
                         catenateAll="0" splitOnCaseChange="0"
                         stemEnglishPossessive="0" preserveOriginal="1"/>
                 <filter class="solr.FlattenGraphFilterFactory"/>
-                <!-- Finally lower-case everything -->
-                <filter class="solr.LowerCaseFilterFactory"/>
             </analyzer>
             <analyzer type="query">
                 <!-- Replace these before tokenization as they would be split into multiple tokens -->
@@ -117,13 +117,13 @@
         <fieldType name="name_text" class="solr.TextField">
             <analyzer type="index">
                 <tokenizer class="solr.WhitespaceTokenizerFactory" rule="java"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
                 <filter class="solr.WordDelimiterGraphFilterFactory"
                         generateWordParts="1" catenateWords="0"
                         generateNumberParts="1" catenateNumbers="0" splitOnNumerics="1"
                         catenateAll="0" splitOnCaseChange="0"
                         stemEnglishPossessive="0" preserveOriginal="1"/>
                 <filter class="solr.FlattenGraphFilterFactory"/>
-                <filter class="solr.LowerCaseFilterFactory"/>
             </analyzer>
             <analyzer type="query">
                 <tokenizer class="solr.WhitespaceTokenizerFactory" rule="java"/>

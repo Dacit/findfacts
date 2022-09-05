@@ -1,5 +1,7 @@
 # Release
-Bild jars:
+Clean:
+`rm **/isa-lib/*.jar`
+Build jars:
 ```shell
 ./sbt clean cleanFiles "project importer-it" "project importer-isabelle" assembly "project findfacts" it:test "project importer-isabelle-build" "run -?"
 ```
