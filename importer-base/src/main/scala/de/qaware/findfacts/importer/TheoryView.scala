@@ -214,6 +214,8 @@ object TheoryView {
 
     def text: String
 
+    def html: String
+
     def contains(entity: Entity): Boolean
 
     override def toString: String =

@@ -65,12 +65,12 @@ object Markup_Blocks
     val WITH = Value("with")
   }
 
-  sealed case class Block(range: Text.Range, start_line: Int, body: String)
+  sealed case class Block(range: Text.Range, start_line: Int, text: String, html: String)
   {
     def append(other: Block): Block =
     {
       require(range.stop == other.range.start)
-      Block(range.try_join(other.range).get, start_line, body + other.body)
+      Block(range.try_join(other.range).get, start_line, text + other.text, html + other.html)
     }
   }
 
@@ -83,9 +83,12 @@ object Markup_Blocks
         val start_index = if (acc.isEmpty) 1 else acc.last.range.stop
 
         val content = XML.content(text)
-        val html = HTML.output(Symbol.decode_yxml(content), hidden = false, structural = false)
+        val body = HTML.output(Symbol.decode_yxml(content), hidden = false, structural = false)
 
-        val block = Block(Text.Range(start_index, start_index + Symbol.length(content)), start_line, html)
+        val html_body = Presentation.make_html(Presentation.Entity_Context.empty, Presentation.elements1, List(text))
+        val html = XML.string_of_body(html_body)
+
+        val block = Block(Text.Range(start_index, start_index + Symbol.length(content)), start_line, body, html)
 
         start_line += content.count {
           case '\n' => true

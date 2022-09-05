@@ -243,7 +243,9 @@ object Theory
     override def startPos: Int = inner.range.start
     override def endPos: Int = inner.range.stop
     override def startLine: Int = inner.start_line
-    override def text: String = inner.body
+    override def text: String = inner.text
+    override def html: String = inner.html
+
     override def contains(entity: TheoryView.Entity): Boolean =
       inner.range.contains(Text.Range(entity.pos.offset, entity.pos.endOffset))
   }

@@ -77,7 +77,7 @@ class ExtractBlocksStep(idBuilder: IdBuilder) extends ImportStep {
       .getOrElse("")
 
     val before = blockBefore.linesWithSeparators.toList.takeRight(ExtractBlocksStep.MAX_CONTEXT_LINES).mkString
-    val inner = block.text
+    val inner = block.html
     val after = blockAfter.linesWithSeparators.take(ExtractBlocksStep.MAX_CONTEXT_LINES).mkString
 
     (before, inner, after)
