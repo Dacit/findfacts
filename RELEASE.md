@@ -7,7 +7,7 @@ Build jars:
 ```
 Extract into archive:
 ```shell
-tar -czf findfacts-0.4.4.tar.gz --transform 's,^,findfacts-0.4.4/,' \
+tar -czf findfacts-0.5.0.tar.gz --transform 's,^,findfacts-0.5.0/,' \
   etc/components \
   importer-isabelle/etc \
   importer-isabelle/src \
