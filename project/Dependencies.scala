@@ -6,6 +6,8 @@ object Dependencies {
 
   val SOLR_VERSION = "8.11.1"
   val PLAY_VERSION = "2.8.7"
+  val JACKSON_VERSION = "2.12.6"
+  val JACKSON_DATABIND_VERSION = "2.12.6.1"
 
   val CIRCE_VERSION = "0.12.0"
   val PLAY_CIRCE_VERSION = "2812.0"
@@ -65,6 +67,23 @@ object Dependencies {
   val solr = ("org.apache.solr" % "solr-core" % SOLR_VERSION
     excludeAll ("org.slf4j" %% "slf4j-api")
     excludeAll "org.apache.logging.log4j")
+
+  // play jackson fix
+  val jacksonOverrides = Seq(
+    "com.fasterxml.jackson.core" % "jackson-core",
+    "com.fasterxml.jackson.core" % "jackson-annotations",
+    "com.fasterxml.jackson.datatype" % "jackson-datatype-jdk8",
+    "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310"
+  ).map(_ % JACKSON_VERSION)
+  val jacksonDatabindOverrides = Seq(
+    "com.fasterxml.jackson.core" % "jackson-databind" % JACKSON_DATABIND_VERSION
+  )
+  val akkaSerializationJacksonOverrides = Seq(
+    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor",
+    "com.fasterxml.jackson.module" % "jackson-module-parameter-names",
+    "com.fasterxml.jackson.module" %% "jackson-module-scala",
+  ).map(_ % JACKSON_VERSION)
+
   val playGuice = ("com.typesafe.play" %% "play-guice" % PLAY_VERSION
     excludeAll ("org.slf4j" %% "slf4j-api"))
   val playCirce = "com.dripower" %% "play-circe" % PLAY_CIRCE_VERSION

@@ -227,7 +227,7 @@ lazy val `search-webapp` = project
       "-Dlog4j.configurationFile=" + (file("search-webapp") / "conf" / "log4j2.properties").getPath,
       "-Dsolr.configset=theorydata-" + schemaVersion,
     ),
-    libraryDependencies ++= (loggingBackend ++ circe ++ playSwaggerGen ++ Seq(
+    libraryDependencies ++= (loggingBackend ++ circe ++ playSwaggerGen ++ jacksonDatabindOverrides ++ jacksonOverrides ++ akkaSerializationJacksonOverrides ++ Seq(
       playGuice,
       playCirce,
       playTestPlus % "test"
