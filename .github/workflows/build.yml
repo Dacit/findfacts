@@ -1,0 +1,22 @@
+name: Build
+on: 
+  push:
+    branches:
+      - devel
+  repository_dispatch:
+    branches:
+      - devel
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rm -r isabelle
+      - run: git clone --depth 1 https://github.com/isabelle-prover/mirror-isabelle.git isabelle
+      - uses: actions/cache@v3
+        with:
+          path: |
+            .isabelle/contrib
+            .isabelle/heaps
+          key: ISABELLE_HOME_USER
+      - run: ./sbt "project importer-isabelle-base" assembly "project findfacts" it:test
