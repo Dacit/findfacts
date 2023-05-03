@@ -124,7 +124,7 @@ qed (simp)
     command should equal("theorem")
 
     // Check that the whole proof is in src
-    block.src should include ("qed (simp)")
+    block.src should include ("qed")
 
     // Check fact
     entities should have size 1

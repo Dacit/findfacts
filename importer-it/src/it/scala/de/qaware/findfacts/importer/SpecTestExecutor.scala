@@ -36,6 +36,7 @@ class SpecTestExecutor extends AnyFunSuite with Matchers {
     Using.resource(LocalSolr(File(Resource.getUrl("solrdir/")).toJava)) { solr =>
       val indexes = solr.listIndexes
       indexes should have size 1
+      indexes.head should equal("theorydata")
     }
   }
 
@@ -59,7 +60,7 @@ class SpecTestExecutor extends AnyFunSuite with Matchers {
 
     // Build test suite for each file
     thyFiles.map { file =>
-      buildTestsuite(file, blocks.filter(_.theory == s"$SESSION.${File(file).nameWithoutExtension}"), toolbox)
+      buildTestsuite(file, blocks.filter(_.theory == s"${File(file).nameWithoutExtension}"), toolbox)
     }
   }
 
