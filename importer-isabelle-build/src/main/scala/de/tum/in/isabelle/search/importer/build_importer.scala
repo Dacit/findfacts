@@ -51,7 +51,7 @@ object Build_Importer {
       val theory_context = context.theory(theory_name)
 
       val isabelle_theory = Export_Theory.read_theory(theory_context)
-      val markup_xml = theory_context.uncompressed_yxml(Export.MARKUP)
+      val markup_xml = theory_context.yxml(Export.MARKUP)
       val markup_blocks = Markup_Blocks.from_XML(markup_xml)
 
       // Create accessor for importer
@@ -83,8 +83,6 @@ object Build_Importer {
     args => {
       /* arguments */
 
-      val build_options = Word.explode(Isabelle_System.getenv("ISABELLE_BUILD_OPTIONS"))
-
       var index_name = "theorydata"
       var configset = Isabelle_System.getenv("SOLR_CONFIGSET")
       var local_solr = ""
@@ -104,7 +102,7 @@ object Build_Importer {
       var fresh_build = false
       var session_groups: List[String] = Nil
       var max_jobs = 1
-      var options = Options.init(opts = build_options)
+      var options = Options.init(specs = Options.Spec.ISABELLE_BUILD_OPTIONS)
       var exclude_sessions: List[String] = Nil
 
       val getopts = Getopts(
@@ -160,7 +158,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         "x:" -> (arg => exclude_sessions = exclude_sessions ::: List(arg))
       )
 
-      options = options + ("export_theory", "true")
+      options = options + "export_theory"
 
       val sessions = getopts(args)
 
@@ -212,7 +210,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         val session_names = sessions_structure.build_selection(selection).filter(_ != "Pure")
         session_names.map(session_name => Future.fork {
           progress.echo("Importing session " + session_name)
-          using(Export.open_session_context(store, deps.base_info(session_name))) { session_context =>
+          using(Export.open_session_context(store, deps.background(session_name))) { session_context =>
             import_session(index_name, session_context, importer_module, progress, verbose)
           }
         }).foreach(_.join)
