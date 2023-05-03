@@ -19,4 +19,4 @@ jobs:
             .isabelle/contrib
             .isabelle/heaps
           key: ISABELLE_HOME_USER
-      - run: ./sbt "project importer-isabelle-base" assembly "project findfacts" it:test
+      - run: ./sbt -Dprofiles=loader "project importer-isabelle-base" assembly "project findfacts" it:test

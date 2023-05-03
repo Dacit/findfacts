@@ -3,7 +3,7 @@ Clean:
 `rm **/isa-lib/*.jar`
 Build jars:
 ```shell
-./sbt clean cleanFiles "project importer-isabelle-base" assembly "project findfacts" it:test "project importer-isabelle-build" "run -?"
+./sbt -Dprofiles=loader clean cleanFiles "project importer-isabelle-base" assembly "project findfacts" it:test "project importer-isabelle-build" "run -?"
 ```
 Extract into archive:
 ```shell
