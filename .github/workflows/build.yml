@@ -16,6 +16,8 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: |
+            .sbt
+            .ivy2
             .isabelle/contrib
             .isabelle/heaps
           key: ISABELLE_HOME_USER
