@@ -4,10 +4,10 @@
 Isabelle Export_Theory -> findfacts TheoryView mapping.
 */
 
-package de.qaware.findfacts.importer
-
+package de.tum.in.isabelle.search.importer
 
 import _root_.scala.language.implicitConversions
+import de.qaware.findfacts.importer.TheoryView
 import de.qaware.findfacts.importer.TheoryView.Source
 import isabelle._
 

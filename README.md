@@ -24,19 +24,7 @@ Example invocation:
 ./sbt "project symbol-synonyms-tool" "run -o common-dt/src/main/resources/solr/conf/synonyms.txt isabelle/etc/symbols"
 ```
 
-### Importer tool (dump)
-Generally:
-```shell
-./sbt "project importer-isabelle" "run <OPTIONS>"
-```
-Use `-?` to get information about the tool usage.
-Example invocation:
-```shell
-./sbt "project importer-isabelle" "run -r localhost:8983 -i 2021_Isabelle2021_AFP2021 -a dump/" 
-``` 
-[Isabelle settings](.isabelle/etc/settings): Increase memory a bit: `-Xss16m` `-Xmx8g`
-
-### Importer tool (build)
+### Importer tool
 Generally:
 ```shell
 isabelle build_importer -?

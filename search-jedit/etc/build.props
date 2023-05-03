@@ -5,7 +5,7 @@ requirements = \
   env:JEDIT_JARS \
   env:FINDFACTS_JEDIT_BASE_JAR \
   env:FINDFACTS_IMPORTER_BASE_JAR \
-  env:FINDFACTS_IMPORTER_JAR
+  env:FINDFACTS_BUILD_IMPORTER_JAR
 sources = \
   src/jedit_findfacts_plugin.scala \
   src/findfacts_dockable.scala \

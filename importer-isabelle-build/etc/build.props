@@ -2,10 +2,13 @@ title = Findfacts Build Importer
 module = $FINDFACTS_BUILD_IMPORTER_JAR
 requirements = \
   env:ISABELLE_SCALA_JAR \
-  $FINDFACTS_IMPORTER_BASE_JAR \
-  $FINDFACTS_IMPORTER_JAR
+  $FINDFACTS_IMPORTER_BASE_JAR
 sources = \
   src/main/scala/de/tum/in/isabelle/search/importer/build_importer.scala \
+  src/main/scala/de/tum/in/isabelle/search/importer/markup_blocks.scala \
+  src/main/scala/de/tum/in/isabelle/search/importer/theory.scala \
   src/main/scala/de/tum/in/isabelle/search/importer/tools.scala
+resources = \
+  src/main/resources/log4j2.properties
 services = \
   de.tum.in.isabelle.search.importer.Tools

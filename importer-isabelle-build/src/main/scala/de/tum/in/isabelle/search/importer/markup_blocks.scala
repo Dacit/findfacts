@@ -4,8 +4,7 @@
 Markup block partitioning by command-spans.
 */
 
-package de.qaware.findfacts.importer
-
+package de.tum.in.isabelle.search.importer
 
 import isabelle._
 
@@ -85,7 +84,9 @@ object Markup_Blocks
         val content = XML.content(text)
         val body = HTML.output(Symbol.decode_yxml(content), hidden = false, structural = false)
 
-        val html_body = Presentation.make_html(Presentation.Entity_Context.empty, Presentation.elements1, List(text))
+        val node_context = Browser_Info.Node_Context.empty
+        val elements = Browser_Info.default_elements.copy(entity = Markup.Elements.empty)
+        val html_body = node_context.make_html(elements, List(text))
         val html = XML.string_of_body(html_body)
 
         val block = Block(Text.Range(start_index, start_index + Symbol.length(content)), start_line, body, html)

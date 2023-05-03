@@ -86,7 +86,7 @@ lazy val loaders = project
     publish / skip := true,
     aggregate := active(LoaderProfile)
   )
-  .aggregate(`isabelle`, `importer-isabelle`, memory)
+  .aggregate(`isabelle`, `importer-isabelle-build`, memory)
 
 // Controls aggregation of sub-projects with memory intensive tests (depending if memory profile is active)
 lazy val memory = project
@@ -140,17 +140,14 @@ lazy val `importer-base` = project
 lazy val isabelle = project.enablePlugins(IsabellePlugin)
 
 // Importer Isabelle projects. Follows Isabelle conventions loosely.
-lazy val `importer-isabelle` = project
+lazy val `importer-isabelle-base` = project
   .settings(
     assemblySettings,
     publish / skip := true,
-    isabelleCommand := "dump_importer -C theorydata-" + schemaVersion,
-    isabelleProject := isabelle,
     libraryDependencies ++= loggingBackend,
-    assembly / assemblyOutputPath := baseDirectory.value / "isa-lib" / "findfacts-importer-base.jar"
+    assembly / assemblyOutputPath := baseDirectory.value / ".."/ "importer-isabelle-build" / "isa-lib" / "findfacts-importer-base.jar"
   )
   .dependsOn(`importer-base`)
-  .enablePlugins(IsabelleToolPlugin)
 
 lazy val `importer-isabelle-build` = project
   .settings(
@@ -159,7 +156,7 @@ lazy val `importer-isabelle-build` = project
     isabelleCommand := "build_importer -C theorydata-" + schemaVersion,
     isabelleProject := isabelle
   )
-  .aggregate(`importer-isabelle`)
+  .aggregate(`importer-isabelle-base`)
   .enablePlugins(IsabelleToolPlugin)
 
 // Integration test to check integration between Isabelle dump and dump_importer
@@ -181,7 +178,7 @@ lazy val `importer-it` = project
         solrDir.delete()
         solrDir.mkdirs()
 
-        // Run dump and dump_importer in Isabelle
+        // Run build_importer in Isabelle
         (run in `importer-isabelle-build`).toTask(" -c -v -l " + solrDir + " -d " + thyDir + " Spec-Tests ") && testTask
       } else {
         Def.task(testTask.value)
@@ -189,7 +186,7 @@ lazy val `importer-it` = project
     }.tag(Tags.Test).value,
     libraryDependencies ++= Seq(scalaTest % "it", classgraph % "it", scalaCompiler % "it", fastParse % "it")
   )
-  .dependsOn(`common-utils` % "it", `common-dt` % "it", `importer-isabelle` % "it", `isabelle` % "it")
+  .dependsOn(`common-utils` % "it", `common-dt` % "it", `importer-isabelle-base` % "it", `isabelle` % "it")
 
 // Search application
 // Core search module
@@ -214,7 +211,7 @@ lazy val `search-jedit` = project
     isabelleProject := isabelle,
     assembly / assemblyOutputPath := baseDirectory.value / "isa-lib" / "findfacts-jedit-base.jar",
   )
-  .aggregate(`importer-isabelle`)
+  .aggregate(`importer-isabelle-build`)
   .dependsOn(`search-core`)
   .enablePlugins(IsabelleToolPlugin)
 

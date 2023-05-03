@@ -1,17 +1,78 @@
 /*  Title:      findfacts/build_importer.scala
-    Author:     Fabian Huch, TU Munich/QAware GmbH
+    Author:     Fabian Huch, TU Munich
 
-Isabelle dump importer.
+Isabelle importer.
  */
 
 package de.tum.in.isabelle.search.importer
 
-import de.qaware.findfacts.common.solr.{LocalSolr, RemoteSolr}
-import de.qaware.findfacts.importer.Importer
-import de.qaware.findfacts.importer.solrimpl.SolrImporterModule
+
 import isabelle._
 
+import Theory._
+
+import de.qaware.findfacts.importer.{ImporterModule, TheoryView}
+import de.qaware.findfacts.importer.solrimpl.SolrImporterModule
+import de.qaware.findfacts.common.solr.{LocalSolr, RemoteSolr, SolrRepository}
+
+
 object Build_Importer {
+
+  /* import a session to solr */
+
+  def solr_import(
+    index_name: String,
+    context: Export.Session_Context,
+    solr_repository: SolrRepository,
+    progress: Progress = new Progress
+  ): Unit = {
+    val importer = new SolrImporterModule(solr_repository)
+    import_session(index_name, context, importer, progress)
+  }
+
+  /* import a session with a generic importer */
+
+  def import_session(
+    index_name: String,
+    context: Export.Session_Context,
+    importer: ImporterModule,
+    progress: Progress = new Progress,
+    verbose: Boolean = false
+  ): Unit = {
+    val session_name = context.session_name
+    val proper_session_theories = context.session_base.proper_session_theories.map(_.theory).toSet
+    val theory_names = context.theory_names().filter(proper_session_theories.contains)
+
+    progress.echo("importing " + context.session_name + " with " + theory_names.length + " theories...")
+
+    val theories = theory_names flatMap { theory_name =>
+      progress.echo_if(verbose, "loading theory " + theory_name + "...")
+
+      val theory_context = context.theory(theory_name)
+
+      val isabelle_theory = Export_Theory.read_theory(theory_context)
+      val markup_xml = theory_context.uncompressed_yxml(Export.MARKUP)
+      val markup_blocks = Markup_Blocks.from_XML(markup_xml)
+
+      // Create accessor for importer
+
+      Some(Theory.map_theory(session_name, isabelle_theory, markup_blocks))
+    }
+
+    progress.echo_if(verbose, "finished loading theories, importing...")
+    val errors = importer.importSession(index_name, theories)
+
+    errors foreach { error =>
+      val message = session_name + ": " + error.step.getClass + ": " + error.causeEntity + ": " + error.errorMsg
+      progress.echo_error_message(message)
+    }
+
+    if (errors.isEmpty) {
+      progress.echo("finished importing " + session_name)
+    } else {
+      progress.echo("finished importing " + session_name + " with " + errors.size + " errors.")
+    }
+  }
 
   /* Isabelle tool wrapper */
 
@@ -151,12 +212,8 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         val session_names = sessions_structure.build_selection(selection).filter(_ != "Pure")
         session_names.map(session_name => Future.fork {
           progress.echo("Importing session " + session_name)
-
-          using(store.open_database(session_name)) { db =>
-            val provider = Export.Provider.database(db, cache, session_name, "dummy")
-            val base = deps.get(session_name).getOrElse(error("No base for " + session_name))
-            val theories = base.session_theories.map(_.theory)
-            Importer.import_session(index_name, provider, session_name, theories, importer_module, progress, verbose)
+          using(Export.open_session_context(store, deps.base_info(session_name))) { session_context =>
+            import_session(index_name, session_context, importer_module, progress, verbose)
           }
         }).foreach(_.join)
       }

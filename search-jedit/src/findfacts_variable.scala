@@ -37,15 +37,16 @@ class Findfacts_Variable
             logger.echo("Creating index " + index_name)
             repo.createIndex(index_name)
           }
-          val provider = Export.Provider.snapshot(snapshot)
-          val session_name = Long_Name.qualifier(snapshot.node_name.theory)
-          if (Export_Theory.read_theory_parents(provider, theory_name).isDefined) {
+
+          val base = PIDE.resources.session_base_info
+          using(Export.Session_Context.open_session(base, Some(snapshot))) { session_context =>
             logger.echo("Importing..")
-            Importer.solr_import(index_name, provider, session_name, List(theory_name), repo)
-            // TODO delete old index
-            logger.echo("Finished importing")
-            _state = Some((snapshot, "Updated to revision " + snapshot.version))
-          } else logger.echo("No exports for " + theory_name)
+            Build_Importer.solr_import(index_name, session_context, repo)
+          }
+          // TODO delete old index
+          logger.echo("Finished importing")
+          _state = Some((snapshot, "Updated to revision " + snapshot.version))
+
           PIDE.session.caret_focus.post(Session.Caret_Focus)
         }
     }
