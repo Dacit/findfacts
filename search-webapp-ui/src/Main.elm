@@ -530,7 +530,8 @@ parseTheory model indexEnc sessionEnc nameEnc =
     case ( Url.percentDecode indexEnc, Url.percentDecode sessionEnc, Url.percentDecode nameEnc ) of
         ( Just index, Just session, Just name ) ->
             ( Theory { index = index, state = Theory.empty session name }
-            , executeFilterQuery model.apiBaseUrl index <| FilterQuery [ FieldFilter SrcFile <| Exact name ] 10000 Nothing
+            , executeFilterQuery model.apiBaseUrl index <|
+                FilterQuery [ FieldFilter SrcFile <| Exact name, FieldFilter Session <| Exact session ] 10000 Nothing
             )
 
         _ ->
