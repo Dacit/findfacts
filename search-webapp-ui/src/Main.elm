@@ -531,7 +531,7 @@ parseTheory model indexEnc sessionEnc nameEnc =
         ( Just index, Just session, Just name ) ->
             ( Theory { index = index, state = Theory.empty session name }
             , executeFilterQuery model.apiBaseUrl index <|
-                FilterQuery [ FieldFilter SrcFile <| Exact name, FieldFilter Session <| Exact session ] 10000 Nothing
+                FilterQuery [ FieldFilter SrcFileFacet <| Exact name, FieldFilter SessionFacet <| Exact session ] 10000 Nothing
             )
 
         _ ->
