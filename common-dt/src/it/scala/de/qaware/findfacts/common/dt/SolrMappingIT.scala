@@ -33,9 +33,9 @@ class SolrMappingIT extends AnyFunSuite with Matchers with BeforeAndAfterEach wi
     val fact = FactEt("Fact.file.const_is_pos", "const_is_pos", List("Const.const", "Fact.Hol.Stuff", "Fact.Hol.other"))
     val typ = TypeEt("Type.fil1.Nat", "Nat", List("Nat"))
 
-    val doc = CodeblockEt("file.5.7", "root", "file", 2, "(*", "\n", "(* comment *)", "\n\n lemma...", List.empty)
-    val block = CodeblockEt("file.8.11", "root", "file", 6, "fun", "*)\n", "fun ...src text...", "\n\n", List(const, fact))
-    val block1 = CodeblockEt("file1.0.6", "root", "file1", 1, "other", "\n", "other src text", "\n", List(typ))
+    val doc = CodeblockEt("file.5.7", "1", "root", "file", "file.thy", 2, "(*", "\n", "(* comment *)", "\n\n lemma...", List.empty)
+    val block = CodeblockEt("file.8.11", "1", "root", "file", "file.thy", 6, "fun", "*)\n", "fun ...src text...", "\n\n", List(const, fact))
+    val block1 = CodeblockEt("file1.0.6", "1", "root", "file1", "file1.thy", 1, "other", "\n", "other src text", "\n", List(typ))
 
     val toMapper = ToSolrDoc[BaseEt]
     val fromMapper = FromSolrDoc[BaseEt]

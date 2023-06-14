@@ -259,6 +259,8 @@ object Theory
 
   def map_theory(
     session_name: String,
+    thy_version: String,
+    thy_file: String,
     isabelle_theory: Export_Theory.Theory,
     markup_Blocks: Markup_Blocks): TheoryView.Theory =
   {
@@ -266,7 +268,9 @@ object Theory
     new TheoryView.Theory
     {
       override val name: String = Long_Name.base_name(isabelle_theory.name)
+      override val version: String = thy_version
       override val session: String = session_name
+      override val file: String = thy_file
       override val source: Source = new Source_Wrapper(markup_Blocks)
       override val types: List[TheoryView.Type] = isabelle_theory.types.map(new Type_Wrapper(_))
       override val consts: List[TheoryView.Const] = isabelle_theory.consts.map(new Const_Wrapper(_))

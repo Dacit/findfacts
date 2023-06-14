@@ -8,7 +8,7 @@ Global / onChangedBuildSource := IgnoreSourceChanges
 // Versions
 val conf = ConfigFactory.parseFile(`search-webapp`.base / "conf" / "application.conf").resolve()
 val projectVersion = conf.getString("app.version")
-val schemaVersion = "0.4.0"
+val schemaVersion = "0.5.0"
 
 // Project-wide settings
 ThisBuild / organization := "de.qaware.findfacts"

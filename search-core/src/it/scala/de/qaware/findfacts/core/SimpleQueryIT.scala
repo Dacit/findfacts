@@ -24,13 +24,25 @@ class SimpleQueryIT extends AnyFunSuite with BeforeAndAfterAll with Matchers wit
     // Add integration test data set
     val const1 = ConstantEt("Const.ExampleThy.Const1", "Const1", List("someId"), "'a => 'b")
     val block1 =
-      CodeblockEt("ExampleSession.ExampleThy.1.11", "ExampleSession", "ExampleThy", 1, "fun", "\n", "fun Example = ...", "\n...", List(const1))
+      CodeblockEt(
+        "ExampleSession.ExampleThy.1.11",
+        "Isabelle",
+        "ExampleSession",
+        "ExampleThy",
+        "~~/ExampleThy.thy",
+        1,
+        "fun",
+        "\n",
+        "fun Example = ...",
+        "\n...", List(const1))
     val fact1 = FactEt("Fact.ExampleThy.ConstIsFact", "ConstIsFact", List(const1.id))
     val block2 =
       CodeblockEt(
         "ExampleSession.ExampleThy.12.14",
+        "Isabelle",
         "ExampleSession",
         "ExampleThy",
+        "~~/ExampleThy.thy",
         3,
         "lemma",
         "\n...",

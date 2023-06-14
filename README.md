@@ -31,7 +31,7 @@ isabelle build_importer -?
 ```
 Example invocation (using isabelle):
 ```shell
-isabelle build_importer -C theorydata-0.4.0 -d '$AFP' -r localhost:8983 -i 2021-1_Isabelle2021-1_AFP2021-1 -a
+isabelle build_importer -C theorydata-0.5.0 -d '$AFP' -r localhost:8983 -i 2022_Isabelle2022_AFP2022 -a
 ``` 
 
 ### Search webapp
