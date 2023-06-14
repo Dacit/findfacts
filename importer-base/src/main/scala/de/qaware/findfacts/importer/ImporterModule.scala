@@ -29,6 +29,15 @@ trait ImporterModule {
   )
 
   /**
+   * Runs the importer for a single theory.
+   *
+   * @param index to import itno
+   * @param theory to import
+   * @return import errors, if any
+   */
+  def importTheory(index: String, theory: Theory): List[ImportError]
+
+  /**
    * Runs the importer for a session.
    *
    * @param index to import into

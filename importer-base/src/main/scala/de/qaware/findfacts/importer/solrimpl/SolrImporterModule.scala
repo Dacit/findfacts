@@ -16,8 +16,8 @@ class SolrImporterModule(solr: SolrRepository) extends ImporterModule {
 
   private val logger = Logger[SolrImporterModule]
 
-  override def importSession(index: String, theories: Seq[TheoryView.Theory]): List[ImportError] = {
-    logger.info("Starting import...")
+  override def importTheory(index: String, theory: TheoryView.Theory): List[ImportError] = {
+    logger.info(s"Importing theory ${theory.name}")
 
     val writeSolrStep = new WriteSolrStep(index, solr)
 
@@ -25,18 +25,20 @@ class SolrImporterModule(solr: SolrRepository) extends ImporterModule {
       logger.info(s"Created index $index")
     }
 
-    val errors = theories flatMap { theory =>
-      logger.info(s"Processing theory ${theory.name}")
+    implicit val ctx: StepContext = StepContext()
+    val errors = (steps :+ writeSolrStep).flatMap(_.execute(theory))
 
-      implicit val ctx: StepContext = StepContext()
-      val errors = (steps :+ writeSolrStep).flatMap(_.execute(theory))
-
-      errors foreach { error =>
-        logger.warn(s"Error during import: $error")
-        logger.debug(s"Details: ${error.getDebugInfo}")
-      }
-      errors
+    errors foreach { error =>
+      logger.warn(s"Error during import: $error")
+      logger.debug(s"Details: ${error.getDebugInfo}")
     }
+    errors.toList
+  }
+
+  override def importSession(index: String, theories: Seq[TheoryView.Theory]): List[ImportError] = {
+    logger.info("Starting session import...")
+
+    val errors = theories.flatMap(importTheory(index, _))
 
     logger.info(s"Finished import with ${errors.size} errors.")
     errors.toList
