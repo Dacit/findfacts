@@ -42,7 +42,7 @@ object Build_Importer {
 
     progress.echo("importing " + context.session_name + " with " + theory_names.length + " theories...")
 
-    val theories = theory_names flatMap { theory_name =>
+    val theories = theory_names map { theory_name =>
       progress.echo_if(verbose, "loading theory " + theory_name + "...")
 
       val theory_context = context.theory(theory_name)
@@ -58,7 +58,7 @@ object Build_Importer {
       val file = link_base + "/" + path.implode
 
       // Create accessor for importer
-      Some(Theory.map_theory(session_name, version, file, isabelle_theory, markup_blocks))
+      Theory.map_theory(session_name, version, file, isabelle_theory, markup_blocks)
     }
 
     progress.echo_if(verbose, "finished loading theories, importing...")
@@ -210,7 +210,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         val store = Sessions.store(options)
 
         // Import
-        val session_names = sessions_structure.build_selection(selection).filter(_ != "Pure")
+        val session_names = sessions_structure.build_selection(selection).filter(_ != Thy_Header.PURE)
         session_names.map(session_name => Future.fork {
           progress.echo("Importing session " + session_name)
           import_session(session_name, afp_link, index_name, store, deps, importer_module, progress, verbose)
