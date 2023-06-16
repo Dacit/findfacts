@@ -35,7 +35,7 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
       snapshot <- PIDE.maybe_snapshot()
       if !snapshot.is_outdated
       plugin <- Findfacts_Plugin.instance
-      state <- plugin.findfacts.state
+      state <- plugin.findfacts.indexed
       if _state != Some(state, query.getText)
     } {
       if (!query.getText.isBlank) search()
@@ -56,7 +56,7 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
       snapshot <- PIDE.maybe_snapshot()
       if !snapshot.is_outdated
       plugin <- Findfacts_Plugin.instance
-      state <- plugin.findfacts.state
+      state <- plugin.findfacts.indexed
       findfacts = plugin.findfacts.search_service
       indexes <- findfacts.listIndexes
       index <- indexes.headOption
