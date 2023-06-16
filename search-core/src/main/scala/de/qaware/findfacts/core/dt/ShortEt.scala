@@ -14,7 +14,10 @@ case object ShortChildren extends Children[ShortThyEt] {
  * Short source code block.
  *
  * @param id unique identifier
+ * @param version of the containing theory
+ * @param session home session of theory
  * @param theory source theory
+ * @param file link for theory
  * @param startLine line at which block starts
  * @param srcBefore source code before this block
  * @param src source text
@@ -24,8 +27,10 @@ case object ShortChildren extends Children[ShortThyEt] {
  */
 final case class ShortBlock(
     id: Id.T,
+    version: Version.T,
     session: Session.T,
     theory: SourceTheory.T,
+    file: SourceFile.T,
     startLine: StartLine.T,
     srcBefore: SourceCodeBefore.T,
     src: SourceCode.T,
