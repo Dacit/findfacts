@@ -9,7 +9,7 @@ package de.tum.in.isabelle.search.importer
 
 import isabelle._
 
-import Theory._
+import Theory_Wrapper._
 
 import de.qaware.findfacts.importer.{ImporterModule, TheoryView}
 import de.qaware.findfacts.importer.solrimpl.SolrImporterModule
@@ -29,37 +29,14 @@ object Build_Importer {
     progress: Progress = new Progress,
     verbose: Boolean = false
   ): Unit = using(Export.open_session_context(store, deps.base_info(session_name))) { context =>
-    val structure = context.sessions_structure
-    val browser_context = Browser_Info.context(structure)
-    val session_dir = browser_context.session_dir(session_name)
-    val info = structure.get(session_name).getOrElse(error("No info for " + quote(session_name)))
-    val version = info.meta_digest.toString
-
-    val document_info = Document_Info.read(context.database_context, deps, List(session_name))
-
     val proper_session_theories = context.session_base.proper_session_theories.map(_.theory).toSet
     val theory_names = context.theory_names().filter(proper_session_theories.contains)
-
     progress.echo("importing " + context.session_name + " with " + theory_names.length + " theories...")
 
-    val theories = theory_names map { theory_name =>
-      progress.echo_if(verbose, "loading theory " + theory_name + "...")
+    val document_info = Document_Info.read(context.database_context, deps, List(session_name))
+    val wrapper = new HTML_Wrapper(session_name, link_base, context.sessions_structure,  document_info)
 
-      val theory_context = context.theory(theory_name)
-
-      val isabelle_theory = Export_Theory.read_theory(theory_context)
-      val markup_xml = theory_context.uncompressed_yxml(Export.MARKUP)
-      val markup_blocks = Markup_Blocks.from_XML(markup_xml)
-
-      val isa_version = Isabelle_System.isabelle_name()
-      val thy_info = document_info.theory_by_name(session_name, theory_name).getOrElse(
-        error("No document info for " + quote(theory_name)))
-      val path = Path.basic(isa_version) + session_dir + browser_context.theory_html(thy_info)
-      val file = link_base + "/" + path.implode
-
-      // Create accessor for importer
-      Theory.map_theory(session_name, version, file, isabelle_theory, markup_blocks)
-    }
+    val theories = theory_names.map(context.theory(_)).map(wrapper.map_theory)
 
     progress.echo_if(verbose, "finished loading theories, importing...")
     val errors = importer.importSession(index_name, theories)

@@ -84,7 +84,13 @@ object EtField extends DefaultEnum[EtField] {
     override val implicits: FieldImplicits[String] = FieldImplicits()
   }
 
-  /** Source text in isabelle thy. */
+  /** Source text in isabelle thy, as syntax-highlighted HTML. */
+  case object SourceCodeMarkup extends SingleValuedField[String] with ParentField {
+    override final val name = SolrSchema.SourceCodeMarkup
+    override val implicits: FieldImplicits[String] = FieldImplicits()
+  }
+
+  /** Raw source text in isabelle thy. */
   case object SourceCode extends SingleValuedField[String] with ParentField {
     override final val name = SolrSchema.SourceCode
     override val implicits: FieldImplicits[String] = FieldImplicits()

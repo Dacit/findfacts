@@ -11,7 +11,7 @@ class StepContextTest
   with BeforeAndAfterEach
   with OptionValues {
 
-  val block: CodeblockEt = CodeblockEt("thy1.0.10", "1", "s", "thy1", "thy1.thy", 1, "lemma", "...", "src", "other stuff", List.empty)
+  val block: CodeblockEt = CodeblockEt("thy1.0.10", "1", "s", "thy1", "thy1.thy", 1, "lemma", "...", "src", "other stuff", "<span>src</span>", List.empty)
   val const: ConstantEt = ConstantEt("Const.thy1.some_const", "some_const", List.empty, "'a -> 'a")
   val fact: FactEt = FactEt("Fact.thy1.some_fact", "some_fact", List.empty)
   val typ: TypeEt = TypeEt("Typ.thy1.some_type", "some_type", List.empty)

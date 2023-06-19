@@ -214,7 +214,7 @@ object TheoryView {
 
     def text: String
 
-    def html: String
+    def markup: String
 
     def contains(entity: Entity): Boolean
 
@@ -223,7 +223,8 @@ object TheoryView {
   }
 
   object Block {
-    def unapply(arg: Block): Option[(Int, Int, Int, String)] = Some(arg.startPos, arg.endPos, arg.startLine, arg.text)
+    def unapply(arg: Block): Option[(Int, Int, Int, String, String)] =
+      Some(arg.startPos, arg.endPos, arg.startLine, arg.text, arg.markup)
   }
 
   trait Source extends Any {

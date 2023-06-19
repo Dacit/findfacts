@@ -9,15 +9,17 @@ import de.qaware.findfacts.core.{FacetQuery, QueryService}
 import de.qaware.findfacts.core.{FieldFilter, FilterQuery}
 import de.qaware.findfacts.core.solrimpl.{SolrFieldFilterMapper, SolrFilterMapper, SolrQueryMapper, SolrQueryService}
 import de.qaware.findfacts.importer.solrimpl.SolrImporterModule
-import de.tum.in.isabelle.search.importer.{Theory, Markup_Blocks}
+import de.tum.in.isabelle.search.importer.Local_Wrapper
 import isabelle.{Console_Progress, Document, Export, Export_Theory, Isabelle_System, Long_Name, Session}
 import isabelle.jedit.PIDE
 import org.slf4j.LoggerFactory
 
 
 class Findfacts_Variable {
-  private val solr_dir = Isabelle_System.tmp_dir("findfacts")
-  private val repo: SolrRepository = LocalSolr(solr_dir)
+  private val solr_dir = Path.explode("$ISABELLE_HOME_USER/findfacts")
+  Isabelle_System.make_directory(solr_dir)
+
+  private val repo: SolrRepository = LocalSolr(solr_dir.absolute_file)
 
   private implicit val INDEX: String = "local"
   if (!repo.listIndexes.contains(INDEX)) {
@@ -60,28 +62,25 @@ class Findfacts_Variable {
         } {
           progress.echo("Importing session " + quote(session_name))
 
-          val proper_theories =
-            if (base.base.session_name == session_name) base.base.proper_session_theories.map(_.theory)
-            else for {
-              theory_name <- session_context.theory_names(session_name)
-              if structure.theory_qualifier(theory_name) == session_name
-            } yield theory_name
+          try {
+            val proper_theories =
+              if (base.base.session_name == session_name) base.base.proper_session_theories.map(_.theory)
+              else for {
+                theory_name <- session_context.theory_names(session_name)
+                if structure.theory_qualifier(theory_name) == session_name
+              } yield theory_name
 
-          val theories = proper_theories.map { theory_name =>
-            val theory_context = session_context.theory(theory_name)
+            val wrapper = new Local_Wrapper(session_name, info, PIDE.resources)
+            val theories = proper_theories.map(session_context.theory(_)).map(wrapper.map_theory)
 
-            val isabelle_theory = Export_Theory.read_theory(theory_context)
-            val markup_xml = theory_context.uncompressed_yxml(Export.MARKUP)
-            val markup_blocks = Markup_Blocks.from_XML(markup_xml)
-            val node = PIDE.resources.find_theory_node(theory_name).get
-            val path = node.path.implode_symbolic
+            // TODO delete session first
+            importer.importSession(INDEX, theories)
 
-            Theory.map_theory(session_name, info.meta_digest.toString, path, isabelle_theory, markup_blocks)
+            _indexed_sessions += session_name -> info.meta_digest
+            progress.echo("Finished importing session " + quote(session_name))
+          } catch {
+            case e => progress.echo("Problem " + e.toString)
           }
-
-          importer.importSession(INDEX, theories)
-
-          _indexed_sessions += session_name -> info.meta_digest
         }
 
         // TODO import theories in draft session

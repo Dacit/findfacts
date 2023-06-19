@@ -22,6 +22,7 @@ case object ShortChildren extends Children[ShortThyEt] {
  * @param srcBefore source code before this block
  * @param src source text
  * @param srcAfter source text after this block
+ * @param srcMarkup source code with markup for syntax highlighting
  * @param entities child entities
  * @param command type of the command
  */
@@ -35,6 +36,7 @@ final case class ShortBlock(
     srcBefore: SourceCodeBefore.T,
     src: SourceCode.T,
     srcAfter: SourceCodeAfter.T,
+    srcMarkup: SourceCodeMarkup.T,
     entities: ShortChildren.T,
     command: Command.T)
 

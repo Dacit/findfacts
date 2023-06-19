@@ -10,8 +10,8 @@ value "''test''"
 
     ctx.block.session should equal("Spec-Tests")
     ctx.block.theory should equal("Executor_Test_Spec")
-    ctx.block.src should include("value")
-    ctx.block.src should include("test")
+    ctx.block.src should equal("value \"''test''\"\n")
+    ctx.block.srcMarkup should include("value")
     ctx.block.command should equal("value")
     ctx.block.entities should be(empty)
 SPEC:END*)

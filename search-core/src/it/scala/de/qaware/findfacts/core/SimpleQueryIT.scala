@@ -34,7 +34,9 @@ class SimpleQueryIT extends AnyFunSuite with BeforeAndAfterAll with Matchers wit
         "fun",
         "\n",
         "fun Example = ...",
-        "\n...", List(const1))
+        "\n...",
+        "<span>fun Example = ...</span>",
+        List(const1))
     val fact1 = FactEt("Fact.ExampleThy.ConstIsFact", "ConstIsFact", List(const1.id))
     val block2 =
       CodeblockEt(
@@ -48,6 +50,7 @@ class SimpleQueryIT extends AnyFunSuite with BeforeAndAfterAll with Matchers wit
         "\n...",
         "lemma example_lem...",
         "(* stuff *)",
+        "<span>lemma example_lem...</span>",
         List(fact1))
 
     val mapper = ToSolrDoc[BaseEt]

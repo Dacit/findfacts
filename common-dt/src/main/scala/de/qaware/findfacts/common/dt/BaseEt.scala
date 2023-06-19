@@ -45,6 +45,7 @@ sealed trait TheoryEt extends BaseEt {
  * @param srcBefore source code before this entity
  * @param src source code of the entity
  * @param srcAfter source code after this entity
+ * @param srcMarkup source code with markup for syntax highlighting
  * @param entities entities from this block
  */
 final case class CodeblockEt(
@@ -58,6 +59,7 @@ final case class CodeblockEt(
     srcBefore: SourceCodeBefore.T,
     src: SourceCode.T,
     srcAfter: SourceCodeAfter.T,
+    srcMarkup: SourceCodeMarkup.T,
     entities: TheoryChildren.T)
   extends BaseEt
   with Discriminator[DocumentKind, EtField.DocKind.type, api.DocumentKind.Parent.type]

@@ -17,6 +17,7 @@ object SolrSchema {
   final val SourceCodeBefore = "src_before"
   final val SourceCode = "src"
   final val SourceCodeAfter = "src_after"
+  final val SourceCodeMarkup = "markup"
   final val Name = "name"
   final val NameFacet = "name_facet"
   final val Uses = "uses"

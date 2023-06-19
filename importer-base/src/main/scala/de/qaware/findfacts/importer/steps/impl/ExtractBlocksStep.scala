@@ -23,23 +23,24 @@ class ExtractBlocksStep(idBuilder: IdBuilder) extends ImportStep {
       if (src.text.isBlank) {
         Some(ImportError(this, src.toString, "Empty block", ""))
       } else {
-        val (before, inner, after) = getContext(theory.source, src)
+        val (before, after) = getContext(theory.source, src)
 
         val cmdKind = getCommandKind(src.text)
 
         val block =
           CodeblockEt(
-            idBuilder.blockId(theory.session, theory.name, src.startPos, src.endPos),
-            theory.version,
-            theory.session,
-            theory.name,
-            theory.file,
-            src.startLine,
-            cmdKind,
-            before,
-            inner,
-            after,
-            List.empty)
+            id = idBuilder.blockId(theory.session, theory.name, src.startPos, src.endPos),
+            version = theory.version,
+            session = theory.session,
+            theory = theory.name,
+            file = theory.file,
+            startLine = src.startLine,
+            command = cmdKind,
+            srcBefore = before,
+            src = src.text,
+            srcAfter = after,
+            srcMarkup = src.markup,
+            entities = List.empty)
         ctx.putBlock(block)
         None
       }
@@ -60,7 +61,7 @@ class ExtractBlocksStep(idBuilder: IdBuilder) extends ImportStep {
     }
   }
 
-  private def getContext(source: Source, block: Block): (String, String, String) = {
+  private def getContext(source: Source, block: Block): (String, String) = {
     // Get source of the position before / after
     val blockBefore = source
       .get(new Position {
@@ -79,10 +80,9 @@ class ExtractBlocksStep(idBuilder: IdBuilder) extends ImportStep {
       .getOrElse("")
 
     val before = blockBefore.linesWithSeparators.toList.takeRight(ExtractBlocksStep.MAX_CONTEXT_LINES).mkString
-    val inner = block.html
     val after = blockAfter.linesWithSeparators.take(ExtractBlocksStep.MAX_CONTEXT_LINES).mkString
 
-    (before, inner, after)
+    (before, after)
   }
 }
 
