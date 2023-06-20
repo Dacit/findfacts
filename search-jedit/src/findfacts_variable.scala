@@ -62,7 +62,7 @@ class Findfacts_Variable {
         } {
           progress.echo("Importing session " + quote(session_name))
 
-          try {
+          Exn.capture {
             val proper_theories =
               if (base.base.session_name == session_name) base.base.proper_session_theories.map(_.theory)
               else for {
@@ -78,15 +78,14 @@ class Findfacts_Variable {
 
             _indexed_sessions += session_name -> info.meta_digest
             progress.echo("Finished importing session " + quote(session_name))
-          } catch {
-            case e => progress.echo("Problem " + e.toString)
+          } match {
+            case Exn.Exn(exn) => progress.echo("Error indexing: " + exn.toString)
+            case Exn.Res(_) => _indexed = Some(snapshot.version)
           }
         }
 
         // TODO import theories in draft session
       }
-
-      _indexed = Some(snapshot.version)
     }
 
     GUI_Thread.later(post_update())
