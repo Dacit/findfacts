@@ -30,10 +30,12 @@ class Findfacts_Variable {
   def indexed: Option[Document.Version] = _indexed
 
   val search_service: QueryService = new SolrQueryService(repo, new SolrQueryMapper(new SolrFieldFilterMapper(new SolrFilterMapper())))
-  private var _indexed_sessions: Map[String, SHA1.Digest] = {
+  private var _indexed_theories: Map[String, SHA1.Digest] = {
     val query = FilterQuery(List(FieldFilter(EtField.StartLine, core.Term("1"))))
-    search_service.getResultShortlist(query).get.values.map(v => v.session -> SHA1.fake_digest(v.version)).toMap
+    search_service.getResultShortlist(query).get.values.map(v => v.theory -> SHA1.fake_digest(v.version)).toMap
   }
+
+  def theories: List[String] = _indexed_theories.keys.toList
 
   val progress = new Console_Progress()
 
@@ -58,26 +60,28 @@ class Findfacts_Variable {
         for {
           session_name <- sessions.distinct.filter(_ != Thy_Header.PURE)
           info <- structure.get(session_name)
-          if !_indexed_sessions.get(session_name).contains(info.meta_digest)
         } {
-          progress.echo("Importing session " + quote(session_name))
+          val proper_theories =
+            if (base.base.session_name == session_name) base.base.proper_session_theories.map(_.theory)
+            else for {
+              theory_name <- session_context.theory_names(session_name)
+              if structure.theory_qualifier(theory_name) == session_name
+            } yield theory_name
 
           Exn.capture {
-            val proper_theories =
-              if (base.base.session_name == session_name) base.base.proper_session_theories.map(_.theory)
-              else for {
-                theory_name <- session_context.theory_names(session_name)
-                if structure.theory_qualifier(theory_name) == session_name
-              } yield theory_name
-
             val wrapper = new Local_Wrapper(session_name, info, PIDE.resources)
-            val theories = proper_theories.map(session_context.theory(_)).map(wrapper.map_theory)
+            for {
+              theory_name <- proper_theories
+              if !_indexed_theories.get(theory_name).contains(info.meta_digest)
+            } {
+              progress.echo("Importing theory " + quote(theory_name) + " in session " + quote(session_name))
 
-            // TODO delete session first
-            importer.importSession(INDEX, theories)
+              val theory = wrapper.map_theory(session_context.theory(theory_name))
 
-            _indexed_sessions += session_name -> info.meta_digest
-            progress.echo("Finished importing session " + quote(session_name))
+              // TODO delete theory first
+              importer.importTheory(INDEX, theory)
+              _indexed_theories += theory_name -> info.meta_digest
+            }
           } match {
             case Exn.Exn(exn) => progress.echo("Error indexing: " + exn.toString)
             case Exn.Res(_) => _indexed = Some(snapshot.version)
