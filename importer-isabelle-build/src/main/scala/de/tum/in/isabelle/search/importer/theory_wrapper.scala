@@ -262,29 +262,37 @@ class Local_Wrapper(session_name: String, info: Sessions.Info, resources: Resour
   }
 
   def get_markup(source: XML.Body): String = {
+    def trim(source: XML.Body): XML.Body = source match {
+      case XML.Elem(markup, body) :: xs => XML.Elem(markup, trim(body)) :: xs
+      case XML.Text(content) :: xs => XML.Text(content.stripTrailing()) :: xs
+      case Nil => Nil
+    }
+
+    def ellipsis(content: String, length: Int): (XML.Body, Int) =
+      if (content.length > length) (XML.string(content.take(length) + "..."), 0)
+      else (XML.string(content), length - content.length)
+
     def filter(body: XML.Body, depth: Int = MAX_DEPTH, length: Int = MAX_LENGTH): (XML.Body, Int) =
-      if (depth == 0) {
-        val res = XML.string(XML.content(body).take(length))
-        (res, length - res.length)
-      }
-      else if (length == 0) (Nil, 0)
+      if (depth == 0 || length == 0) (Nil, length)
       else body.foldLeft((List.empty[XML.Tree], length)) {
-        case ((body0, length), XML.Elem(markup, body)) =>
-          val (body1, length1) = markup match {
-            case Markup.Entity(_, _) => filter(body, depth, length)
-            case _ =>
-              val (body1, length1) = filter(body, depth - 1, length - YXML.string_of_tree(XML.Elem(markup, Nil)).length)
-              (List(XML.Elem(markup, body1)), length1)
+        case ((body0, length0), XML.Elem(markup, body)) =>
+          markup match {
+            case Markup.Entity(_, _) =>
+              val (body1, length1) = filter(body, depth, length0)
+              (body0 ::: body1, length1)
+            case Markup(kind, _) =>
+              val markup_length = YXML.string_of_tree(XML.elem(kind)).length
+              if (markup_length > length0) filter(body, 0, length0)
+              else {
+                val (body1, length1) = filter(body, depth - 1, length0 - markup_length)
+                (body0 ::: XML.elem(kind, body1) :: Nil, length1)
+              }
           }
+        case ((body0, length0), XML.Text(content)) =>
+          val (body1, length1) = ellipsis(content, length0)
           (body0 ::: body1, length1)
-        case ((body0, length), XML.Text(content)) =>
-          val res = XML.string(content.take(length))
-          (body0 ::: res, length - res.length)
       }
 
-    val res = YXML.string_of_body(filter(source)._1)
-    if (res.getBytes.length > 32766) "too long"
-    else if (res.isEmpty) "nothing"
-    else res
+    YXML.string_of_body(filter(trim(source.reverse).reverse)._1)
   }
 }
