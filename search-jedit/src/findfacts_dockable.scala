@@ -15,7 +15,7 @@ import java.awt.event.KeyEvent
 import java.awt.BorderLayout
 
 import de.qaware.findfacts.core
-import de.qaware.findfacts.common.dt.EtField
+import de.qaware.findfacts.common.dt.{EtField, Kind}
 import de.qaware.findfacts.core.{FieldFilter, FilterQuery}
 import de.qaware.findfacts.core.QueryService.ResultList
 import de.qaware.findfacts.core.dt.ShortBlock
@@ -54,9 +54,23 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
     set_text(snapshot, text)
   }
 
+  case class Query(search: String, facts: Boolean, types: Boolean, constants: Boolean) {
+    def filter_query: FilterQuery = {
+      val q = FieldFilter(EtField.SourceCode, core.Term(search))
+      val kinds = List(facts -> Kind.Fact, constants -> Kind.Constant, types -> Kind.Type).filter(_._1).map(
+        _._2.entryName).map(core.Exact)
+
+      kinds match {
+        case Nil => FilterQuery(List(q))
+        case k :: Nil => FilterQuery(List(q, FieldFilter(EtField.Kind, k)))
+        case k0 :: k1 :: ks => FilterQuery(List(q, FieldFilter(EtField.Kind, core.Or(k0, k1, ks: _*))))
+      }
+    }
+  }
+  def query: Query = Query(query_string.getText, find_facts.selected, find_types.selected, find_constants.selected)
 
   // panel state: indexed snapshot + query
-  private var _state: Option[(Document.Version, String)] = None
+  private var _state: Option[(Document.Version, Query)] = None
 
   override def detach_operation: Option[() => Unit] = pretty_text_area.detach_operation
 
@@ -67,10 +81,10 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
       plugin <- Findfacts_Plugin.instance
     } plugin.findfacts.indexed match {
       case None => GUI_Thread.later(set_text(snapshot, XML.string(plugin.findfacts.index_message)))
-      case Some(state) if _state != Some(state, query.getText) =>
-        if (!query.getText.isBlank) search()
+      case Some(state) if _state != Some(state, query_string.getText) =>
+        if (!query_string.getText.isBlank) search()
         else {
-          _state = Some(state, "")
+          _state = Some(state, query)
           GUI_Thread.later(set_text(snapshot, XML.string(plugin.findfacts.index_message)))
         }
       case _ =>
@@ -79,8 +93,6 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
   /* controls */
 
   private def search(): Unit = {
-    val q = query.getText
-    val f_q = FilterQuery(List(FieldFilter(EtField.SourceCode, core.Term(q))))
     for {
       snapshot <- PIDE.maybe_snapshot()
       if !snapshot.is_outdated
@@ -89,9 +101,9 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
       findfacts = plugin.findfacts.search_service
       indexes <- findfacts.listIndexes
       index <- indexes.headOption
-      result <- findfacts.getResultShortlist(f_q)(index)
+      result <- findfacts.getResultShortlist(query.filter_query)(index)
     } {
-      _state = Some(state, query.getText)
+      _state = Some(state, query)
       GUI_Thread.later(set_result(snapshot, result))
     }
   }
@@ -102,7 +114,7 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
         "Findfacts search query")
   }
 
-  private val query = new HistoryTextField("findfacts-query") {
+  private val query_string = new HistoryTextField("findfacts-query") {
     override def processKeyEvent(evt: KeyEvent): Unit = {
       if (evt.getID == KeyEvent.KEY_PRESSED && evt.getKeyCode == KeyEvent.VK_ENTER) handle_update()
       super.processKeyEvent(evt)
@@ -118,9 +130,27 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
     override def clicked(): Unit = handle_update()
   }
 
+  private val find_facts = new GUI.Check("Facts", true) {
+    tooltip = "Specify whether results must contain facts"
+
+    override def clicked(): Unit = handle_update()
+  }
+
+  private val find_constants = new GUI.Check("Constants") {
+    tooltip = "Specify whether results must contain constants"
+
+    override def clicked(): Unit = handle_update()
+  }
+
+  private val find_types = new GUI.Check("Types") {
+    tooltip = "Specify whether results must contain types"
+
+    override def clicked(): Unit = handle_update()
+  }
+
   private val controls =
     Wrap_Panel(
-      List(query_label, Component.wrap(query), apply_query))
+      List(find_facts, find_types, find_constants, query_label, Component.wrap(query_string), apply_query))
 
   add(controls.peer, BorderLayout.NORTH)
 
