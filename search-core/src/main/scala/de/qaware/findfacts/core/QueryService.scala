@@ -55,6 +55,15 @@ trait QueryService {
   def getResultShortlist(filterQuery: FilterQuery)(implicit index: String): Try[ResultList[ShortBlock]]
 
   /**
+   * Deletes all elements matched by the block filter query (no entity filters allowed).
+   *
+   * @param filters to select the elements to delete. May only contain block filters!
+   * @param index to delete in
+   * @return errors if any
+   */
+  def deleteBlock(filters: List[FieldFilter])(implicit index: String): Try[Unit]
+
+  /**
    * Lists available indexes.
    *
    * @return list of available indexes

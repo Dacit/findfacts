@@ -9,7 +9,7 @@ import cats.syntax.traverse._
 import com.typesafe.scalalogging.Logger
 import org.apache.solr.client.solrj.SolrRequest.METHOD
 import org.apache.solr.client.solrj.request.json.JsonQueryRequest
-import org.apache.solr.client.solrj.response.QueryResponse
+import org.apache.solr.client.solrj.response.{QueryResponse, SolrResponseBase}
 import org.apache.solr.client.solrj.{SolrQuery, SolrServerException}
 
 import de.qaware.findfacts.common.dt.EtField.Uses
@@ -33,20 +33,15 @@ class SolrQueryService(solr: SolrRepository, mapper: SolrQueryMapper) extends Qu
   /** Make this implicitly available. */
   private implicit val queryService: SolrQueryService = this
 
-  /** Get result from solr */
-  private def getSolrResult(query: Either[SolrQuery, JsonQueryRequest])(implicit index: String): Try[QueryResponse] = {
+  /** Get/Check result from solr */
+  private def getSolrResult[A <: SolrResponseBase, B](query: B, exec: B => A): Try[A] = {
     Try {
       logger.info(s"Executing query $query")
 
-      val resp = query match {
-        case Left(query) => solr.query(index, query, METHOD.POST)
-        case Right(query) => query.process(solr, index)
-      }
-
+      val resp = exec(query)
       if (resp.getStatus != 0 && resp.getStatus != 200) {
         throw new IllegalStateException(s"Query status was not ok: $resp")
       }
-      logger.info(s"Found ${resp.getResults.getNumFound} entries")
       resp
     }
   }
@@ -86,7 +81,9 @@ class SolrQueryService(solr: SolrRepository, mapper: SolrQueryMapper) extends Qu
     for {
       query <- qBuilder(query)
       () = docMapper.getSolrFields.foreach(f => query.addField(f.name))
-      res <- getSolrResult(Left(query))
+
+      res <- getSolrResult(query, (query: SolrQuery) => solr.query(index, query, METHOD.POST))
+      _ = logger.info(s"Found ${res.getResults.getNumFound} entries")
       typedRes <- res.getResults.asScala.map(docMapper.fromSolrDoc).toList.sequence
     } yield rMapper(res, typedRes)
   }
@@ -138,8 +135,10 @@ class SolrQueryService(solr: SolrRepository, mapper: SolrQueryMapper) extends Qu
 
     for {
       solrQuery <- mapper.buildBlockFacetQuery(facetQuery)
-      solrResult <- getSolrResult(Right(solrQuery))
+      solrResult <- getSolrResult(solrQuery, (query: JsonQueryRequest) => query.process(solr, index))
     } yield {
+      logger.info(s"Found ${solrResult.getResults.getNumFound} entries")
+
       // Handle null values in response / for facets
       if (solrResult == null) {
         return Failure(new SolrServerException("No response"))
@@ -223,6 +222,14 @@ class SolrQueryService(solr: SolrRepository, mapper: SolrQueryMapper) extends Qu
 
   override def getResultShortlist(filterQuery: FilterQuery)(implicit index: String): Try[ResultList[ShortBlock]] = {
     getRes[ShortBlock, ResultList[ShortBlock]](filterQuery, mapper.buildBlockFilterQuery, mapResultList)
+  }
+
+  override def deleteBlock(filters: List[FieldFilter])(implicit index: String): Try[Unit] = {
+    for {
+      query <- mapper.buildParentFilters(filters)
+      _ <- getSolrResult(query, (query: String) => solr.deleteByQuery(index, query))
+      _ <- getSolrResult("commit", (_: String) => solr.commit(index))
+    } yield ()
   }
 
   override def listIndexes: Try[List[String]] =
