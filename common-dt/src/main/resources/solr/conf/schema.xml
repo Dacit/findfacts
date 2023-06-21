@@ -19,7 +19,7 @@
         <field name="type_facet" type="string" docValues="true" multiValued="false"/>
         <field name="src_before" type="string" uninvertible="false" multiValued="false"/>
         <field name="src" type="source_text" uninvertible="false" multiValued="false"/>
-        <field name="markup" type="string" uninvertible="false" multiValued="false"/>
+        <field name="markup" type="large_text" uninvertible="false" multiValued="false" indexed="false" docValues="false"/>
         <field name="src_after" type="string" uninvertible="false" multiValued="false"/>
         <field name="uses" type="string" uninvertible="false" multiValued="true"/>
         <field name="_version_" type="plong" indexed="false" stored="false" multiValued="false"/>
@@ -133,5 +133,6 @@
                 <filter class="solr.LowerCaseFilterFactory"/>
             </analyzer>
         </fieldType>
+        <fieldtype name="large_text" class="solr.TextField"/>
     </types>
 </schema>

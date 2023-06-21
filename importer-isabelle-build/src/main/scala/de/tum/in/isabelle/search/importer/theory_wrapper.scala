@@ -268,31 +268,13 @@ class Local_Wrapper(session_name: String, info: Sessions.Info, resources: Resour
       case Nil => Nil
     }
 
-    def ellipsis(content: String, length: Int): (XML.Body, Int) =
-      if (content.length > length) (XML.string(content.take(length) + "..."), 0)
-      else (XML.string(content), length - content.length)
-
-    def filter(body: XML.Body, depth: Int = MAX_DEPTH, length: Int = MAX_LENGTH): (XML.Body, Int) =
-      if (depth == 0 || length == 0) (Nil, length)
-      else body.foldLeft((List.empty[XML.Tree], length)) {
-        case ((body0, length0), XML.Elem(markup, body)) =>
-          markup match {
-            case Markup.Entity(_, _) =>
-              val (body1, length1) = filter(body, depth, length0)
-              (body0 ::: body1, length1)
-            case Markup(kind, _) =>
-              val markup_length = YXML.string_of_tree(XML.elem(kind)).length
-              if (markup_length > length0) filter(body, 0, length0)
-              else {
-                val (body1, length1) = filter(body, depth - 1, length0 - markup_length)
-                (body0 ::: XML.elem(kind, body1) :: Nil, length1)
-              }
-          }
-        case ((body0, length0), XML.Text(content)) =>
-          val (body1, length1) = ellipsis(content, length0)
-          (body0 ::: body1, length1)
+    def filter(body: XML.Body): XML.Body =
+      body.flatMap {
+        case XML.Elem(Markup.Entity(_, _), body) => filter(body)
+        case XML.Elem(markup, body) => List(XML.Elem(markup, filter(body)))
+        case e => List(e)
       }
 
-    YXML.string_of_body(filter(trim(source.reverse).reverse)._1)
+    YXML.string_of_body(filter(trim(source.reverse).reverse))
   }
 }
