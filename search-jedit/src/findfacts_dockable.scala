@@ -66,13 +66,12 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
       if !snapshot.is_outdated
       plugin <- Findfacts_Plugin.instance
     } plugin.findfacts.indexed match {
-      case None => GUI_Thread.later(set_text(snapshot, XML.string("Indexing...")))
+      case None => GUI_Thread.later(set_text(snapshot, XML.string(plugin.findfacts.index_message)))
       case Some(state) if _state != Some(state, query.getText) =>
         if (!query.getText.isBlank) search()
         else {
           _state = Some(state, "")
-          val text = "Indexed " + plugin.findfacts.theories.length + " theories."
-          GUI_Thread.later(set_text(snapshot, XML.string(text)))
+          GUI_Thread.later(set_text(snapshot, XML.string(plugin.findfacts.index_message)))
         }
       case _ =>
     }

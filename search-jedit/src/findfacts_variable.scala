@@ -29,15 +29,17 @@ class Findfacts_Variable {
   private var _indexed: Option[Document.Version] = None
   def indexed: Option[Document.Version] = _indexed
 
-  val search_service: QueryService = new SolrQueryService(repo, new SolrQueryMapper(new SolrFieldFilterMapper(new SolrFilterMapper())))
-  private var _indexed_theories: Map[String, SHA1.Digest] = {
-    val query = FilterQuery(List(FieldFilter(EtField.StartLine, core.Term("1"))))
-    search_service.getResultShortlist(query).get.values.map(v => v.theory -> SHA1.fake_digest(v.version)).toMap
+  val search_service: QueryService = new SolrQueryService(repo,
+    new SolrQueryMapper(new SolrFieldFilterMapper(new SolrFilterMapper())))
+
+  private var _indexed_theories: Map[(String, String), SHA1.Digest] = {
+    val query = FilterQuery(List(FieldFilter(EtField.StartLine, core.Term("1"))), pageSize = Int.MaxValue)
+    search_service.getResultShortlist(query).get.values.map(v =>
+      (v.session, v.theory) -> SHA1.fake_digest(v.version)).toMap
   }
 
-  def theories: List[String] = _indexed_theories.keys.toList
-
-  val progress = new Console_Progress()
+  private var _index_message: String = "Indexing..."
+  def index_message: String = _index_message
 
   private def handle_update(): Unit = synchronized {
     for {
@@ -72,27 +74,30 @@ class Findfacts_Variable {
             val wrapper = new Local_Wrapper(session_name, info, PIDE.resources)
             for {
               theory_name <- proper_theories
-              if !_indexed_theories.get(theory_name).contains(info.meta_digest)
+              base_name = Long_Name.base_name(theory_name)
+              if !_indexed_theories.get(session_name, base_name).contains(info.meta_digest)
             } {
-              progress.echo("Importing theory " + quote(theory_name) + " in session " + quote(session_name))
+              search_service.deleteBlock(List(
+                FieldFilter(EtField.SessionFacet, core.Term(session_name)),
+                FieldFilter(EtField.SourceTheoryFacet, core.Term(base_name))))
 
               val theory = wrapper.map_theory(session_context.theory(theory_name))
-
-              // TODO delete theory first
               importer.importTheory(INDEX, theory)
-              _indexed_theories += theory_name -> info.meta_digest
+
+              _indexed_theories += (session_name, base_name) -> info.meta_digest
             }
           } match {
-            case Exn.Exn(exn) => progress.echo("Error indexing: " + exn.toString)
-            case Exn.Res(_) => _indexed = Some(snapshot.version)
+            case Exn.Exn(exn) => _index_message = "Error indexing: " + exn.toString
+            case Exn.Res(_) =>
+              _indexed = Some(snapshot.version)
+              _index_message = "Indexed " + _indexed_theories.size + " theories"
           }
+          GUI_Thread.later(post_update())
         }
 
-        // TODO import theories in draft session
+        // TODO import theories in draft session / sessions without heap images
       }
     }
-
-    GUI_Thread.later(post_update())
   }
 
   private def post_update(): Unit = {
