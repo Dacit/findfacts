@@ -10,13 +10,14 @@ import isabelle.jedit.*
 import isabelle.*
 
 import scala.swing.{Component, Label}
+import scala.util.{Failure, Success}
 
 import java.awt.event.KeyEvent
 import java.awt.BorderLayout
 
 import de.qaware.findfacts.core
 import de.qaware.findfacts.common.dt.{EtField, Kind}
-import de.qaware.findfacts.core.{FieldFilter, FilterQuery}
+import de.qaware.findfacts.core.{Exact, FieldFilter, FilterQuery}
 import de.qaware.findfacts.core.QueryService.ResultList
 import de.qaware.findfacts.core.dt.ShortBlock
 
@@ -26,6 +27,8 @@ import org.gjt.sp.jedit.gui.HistoryTextField
 
 class Findfacts_Dockable(view: View, position: String) extends Dockable(view, position) {
   GUI_Thread.require {}
+
+  val RESULTS_SHOWN = 100
 
   /* text area */
 
@@ -47,27 +50,25 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
           Markup.DEF_FILE -> result.file)),
         Symbol.decode_yxml(result.srcMarkup))
 
+    val count_text = if (results.count > RESULTS_SHOWN) " (showing top " + RESULTS_SHOWN.toString + ")" else ""
+
     val text =
-      XML.string(results.count.toString + " results found:") ::: sep :::
+      XML.string(results.count.toString + " results found " + count_text) ::: sep :::
         Pretty.separate(results.values.toList.map(print_result), sep)
 
     set_text(snapshot, text)
   }
 
-  case class Query(search: String, facts: Boolean, types: Boolean, constants: Boolean) {
-    def filter_query: FilterQuery = {
-      val q = FieldFilter(EtField.SourceCode, core.Term(search))
-      val kinds = List(facts -> Kind.Fact, constants -> Kind.Constant, types -> Kind.Type).filter(_._1).map(
-        _._2.entryName).map(core.Exact)
-
-      kinds match {
-        case Nil => FilterQuery(List(q))
-        case k :: Nil => FilterQuery(List(q, FieldFilter(EtField.Kind, k)))
-        case k0 :: k1 :: ks => FilterQuery(List(q, FieldFilter(EtField.Kind, core.Or(k0, k1, ks: _*))))
-      }
-    }
+  case class Query(search: String, kind: Kind) {
+    def filter_query: FilterQuery =
+      FilterQuery(
+        List(
+          FieldFilter(EtField.SourceCode, core.Term(search)),
+          FieldFilter(EtField.Kind, Exact(kind_selector.selection.item.entryName))),
+        pageSize = RESULTS_SHOWN)
   }
-  def query: Query = Query(query_string.getText, find_facts.selected, find_types.selected, find_constants.selected)
+
+  def query: Query = Query(query_string.getText, kind_selector.selection.item)
 
   // panel state: indexed snapshot + query
   private var _state: Option[(Document.Version, Query)] = None
@@ -101,10 +102,13 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
       findfacts = plugin.findfacts.search_service
       indexes <- findfacts.listIndexes
       index <- indexes.headOption
-      result <- findfacts.getResultShortlist(query.filter_query)(index)
-    } {
-      _state = Some(state, query)
-      GUI_Thread.later(set_result(snapshot, result))
+    } findfacts.getResultShortlist(query.filter_query)(index) match {
+      case Failure(exception) =>
+        _state = Some(state, query)
+        GUI_Thread.later(set_text(snapshot, XML.string("Query failed: " + exception.toString)))
+      case Success(result) =>
+        _state = Some(state, query)
+        GUI_Thread.later(set_result(snapshot, result))
     }
   }
 
@@ -130,27 +134,16 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
     override def clicked(): Unit = handle_update()
   }
 
-  private val find_facts = new GUI.Check("Facts", true) {
-    tooltip = "Specify whether results must contain facts"
+  private val kind_selector = new GUI.Selector[Kind](Kind.values.toList.reverse) {
+    name = "findfacts_kind"
+    tooltip = "Results must include selected kinds"
 
-    override def clicked(): Unit = handle_update()
-  }
-
-  private val find_constants = new GUI.Check("Constants") {
-    tooltip = "Specify whether results must contain constants"
-
-    override def clicked(): Unit = handle_update()
-  }
-
-  private val find_types = new GUI.Check("Types") {
-    tooltip = "Specify whether results must contain types"
-
-    override def clicked(): Unit = handle_update()
+    override def changed(): Unit = handle_update()
   }
 
   private val controls =
     Wrap_Panel(
-      List(find_facts, find_types, find_constants, query_label, Component.wrap(query_string), apply_query))
+      List(kind_selector, query_label, Component.wrap(query_string), apply_query))
 
   add(controls.peer, BorderLayout.NORTH)
 
