@@ -383,7 +383,7 @@ shortBlockDecoder =
       |> andMap (Decode.field "command" Decode.string)
       |> andMap (Decode.field "startLine" Decode.int)
       |> andMap (Decode.field "srcBefore" Decode.string)
-      |> andMap (Decode.field "src" Decode.string)
+      |> andMap (Decode.field "srcMarkup" Decode.string)
       |> andMap (Decode.field "srcAfter" Decode.string)
       |> andMap (Decode.field "entities" (Decode.list shortEtDecoder))
 

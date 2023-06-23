@@ -14,22 +14,29 @@ case object ShortChildren extends Children[ShortThyEt] {
  * Short source code block.
  *
  * @param id unique identifier
+ * @param version of the containing theory
+ * @param session home session of theory
  * @param theory source theory
+ * @param file link for theory
  * @param startLine line at which block starts
  * @param srcBefore source code before this block
  * @param src source text
  * @param srcAfter source text after this block
+ * @param srcMarkup source code with markup for syntax highlighting
  * @param entities child entities
  * @param command type of the command
  */
 final case class ShortBlock(
     id: Id.T,
+    version: Version.T,
     session: Session.T,
     theory: SourceTheory.T,
+    file: SourceFile.T,
     startLine: StartLine.T,
     srcBefore: SourceCodeBefore.T,
     src: SourceCode.T,
     srcAfter: SourceCodeAfter.T,
+    srcMarkup: SourceCodeMarkup.T,
     entities: ShortChildren.T,
     command: Command.T)
 

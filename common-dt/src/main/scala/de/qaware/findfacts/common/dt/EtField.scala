@@ -60,9 +60,21 @@ object EtField extends DefaultEnum[EtField] {
     override val implicits: FieldImplicits[String] = FieldImplicits()
   }
 
+  /** Version. */
+  case object Version extends SingleValuedField[String] with ParentField {
+    override val name: String = SolrSchema.Version
+    override val implicits: FieldImplicits[String] = FieldImplicits()
+  }
+
   /** Kind of command span. */
   case object Command extends SingleValuedField[String] with ParentField {
     override val name: String = SolrSchema.Command
+    override val implicits: FieldImplicits[String] = FieldImplicits()
+  }
+
+  /** Source file, e.g. link, path, etc. */
+  case object SourceFile extends SingleValuedField[String] with ParentField {
+        override val name: String = SolrSchema.SourceFile
     override val implicits: FieldImplicits[String] = FieldImplicits()
   }
 
@@ -72,7 +84,13 @@ object EtField extends DefaultEnum[EtField] {
     override val implicits: FieldImplicits[String] = FieldImplicits()
   }
 
-  /** Source text in isabelle thy. */
+  /** Source text in isabelle thy, as syntax-highlighted HTML. */
+  case object SourceCodeMarkup extends SingleValuedField[String] with ParentField {
+    override final val name = SolrSchema.SourceCodeMarkup
+    override val implicits: FieldImplicits[String] = FieldImplicits()
+  }
+
+  /** Raw source text in isabelle thy. */
   case object SourceCode extends SingleValuedField[String] with ParentField {
     override final val name = SolrSchema.SourceCode
     override val implicits: FieldImplicits[String] = FieldImplicits()

@@ -1,7 +1,7 @@
 package de.qaware.findfacts.core.solrimpl
 
 import scala.jdk.CollectionConverters._
-import scala.util.Try
+import scala.util.{Failure, Try, Success}
 
 import org.apache.solr.client.solrj
 import org.apache.solr.client.solrj.SolrQuery.ORDER
@@ -9,9 +9,9 @@ import org.apache.solr.client.solrj.request.json.{DomainMap, JsonQueryRequest, T
 import org.apache.solr.common.params.CursorMarkParams
 
 import de.qaware.findfacts.common.dt.EtField
-import de.qaware.findfacts.core.solrimpl.SolrQueryLiterals.{AND, QUERY_PARENT}
+import de.qaware.findfacts.core.solrimpl.SolrQueryLiterals.{ALL, AND, QUERY_ALL, QUERY_PARENT}
 import de.qaware.findfacts.core.solrimpl.SolrQueryMapper._
-import de.qaware.findfacts.core.{FacetQuery, FilterQuery}
+import de.qaware.findfacts.core.{FacetQuery, FieldFilter, FilterQuery}
 
 /**
  * Mappers to map queries to solr query string.
@@ -19,6 +19,23 @@ import de.qaware.findfacts.core.{FacetQuery, FilterQuery}
  * @param fieldFilterMapper to map filter queries
  */
 class SolrQueryMapper(fieldFilterMapper: SolrFieldFilterMapper) {
+
+  /**
+   * Builds single-string solr query for filters (parenty filters only, no sorting).
+   *
+   * @param index for recursive calls
+   * @param queryService for recursive calls
+   * @param filters to map (may only restrict parent fields)
+   * @return string query representation
+   */
+  def buildParentFilters(
+      filters: List[FieldFilter])(implicit index: String, queryService: SolrQueryService): Try[String] = {
+    fieldFilterMapper.mapSimpleFieldFilters(filters) flatMap { filters =>
+      if (filters.childFqs.nonEmpty) Failure(new IllegalArgumentException("Query contained child filters"))
+      else if (filters.fqs.nonEmpty) Success(filters.fqs.mkString(s" $AND "))
+      else Success(QUERY_ALL)
+    }
+  }
 
   /**
    * Builds solr query (that retrieves parent blocks) for a filter query.

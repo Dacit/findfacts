@@ -37,22 +37,29 @@ sealed trait TheoryEt extends BaseEt {
 /**
  * Any code block.
  *
- * @param theory source in which entity was defined
+ * @param version of the code block (implicitly versions its entities)
+ * @param session in which the theory is in
+ * @param theory source in which the block was defined
+ * @param file where the theory is located
  * @param startLine line at which code block starts
  * @param srcBefore source code before this entity
  * @param src source code of the entity
  * @param srcAfter source code after this entity
+ * @param srcMarkup source code with markup for syntax highlighting
  * @param entities entities from this block
  */
 final case class CodeblockEt(
     override val id: Id.T,
+    version: Version.T,
     session: Session.T,
     theory: SourceTheory.T,
+    file: SourceFile.T,
     startLine: StartLine.T,
     command: Command.T,
     srcBefore: SourceCodeBefore.T,
     src: SourceCode.T,
     srcAfter: SourceCodeAfter.T,
+    srcMarkup: SourceCodeMarkup.T,
     entities: TheoryChildren.T)
   extends BaseEt
   with Discriminator[DocumentKind, EtField.DocKind.type, api.DocumentKind.Parent.type]

@@ -9,10 +9,8 @@ package de.tum.in.isabelle.search.importer
 import isabelle._
 
 
-object Markup_Blocks
-{
-  object Append_Token extends Enumeration
-  {
+object Markup_Blocks {
+  object Append_Token extends Enumeration {
     val ALSO = Value("also")
     val AND = Value("and")
     val APPLY = Value("apply")
@@ -64,32 +62,23 @@ object Markup_Blocks
     val WITH = Value("with")
   }
 
-  sealed case class Block(range: Text.Range, start_line: Int, text: String, html: String)
-  {
-    def append(other: Block): Block =
-    {
+  sealed case class Block(range: Text.Range, start_line: Int, text: String, raw: XML.Body) {
+    def append(other: Block): Block = {
       require(range.stop == other.range.start)
-      Block(range.try_join(other.range).get, start_line, text + other.text, html + other.html)
+      Block(range.try_join(other.range).get, start_line, text + other.text, raw ::: other.raw)
     }
   }
 
-  def from_XML(body: XML.Body): Markup_Blocks =
-  {
+  def from_XML(body: XML.Body): Markup_Blocks = {
     var start_line = 1
 
     val blocks = body.foldLeft(Nil: List[Block]) {
-      case (acc, text) =>
+      case (acc, elem) =>
         val start_index = if (acc.isEmpty) 1 else acc.last.range.stop
 
-        val content = XML.content(text)
-        val body = HTML.output(Symbol.decode_yxml(content), hidden = false, structural = false)
-
-        val node_context = Browser_Info.Node_Context.empty
-        val elements = Browser_Info.default_elements.copy(entity = Markup.Elements.empty)
-        val html_body = node_context.make_html(elements, List(text))
-        val html = XML.string_of_body(html_body)
-
-        val block = Block(Text.Range(start_index, start_index + Symbol.length(content)), start_line, body, html)
+        val content = XML.content(elem)
+        val text = Symbol.decode(content)
+        val block = Block(Text.Range(start_index, start_index + Symbol.length(content)), start_line, text, List(elem))
 
         start_line += content.count {
           case '\n' => true
@@ -111,8 +100,7 @@ object Markup_Blocks
   }
 }
 
-final class Markup_Blocks private(val blocks: List[Markup_Blocks.Block])
-{
+final class Markup_Blocks private(val blocks: List[Markup_Blocks.Block]) {
   import Markup_Blocks._
 
   def get_containing(range: Text.Range): Option[Block] =

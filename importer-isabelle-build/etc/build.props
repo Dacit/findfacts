@@ -6,7 +6,7 @@ requirements = \
 sources = \
   src/main/scala/de/tum/in/isabelle/search/importer/build_importer.scala \
   src/main/scala/de/tum/in/isabelle/search/importer/markup_blocks.scala \
-  src/main/scala/de/tum/in/isabelle/search/importer/theory.scala \
+  src/main/scala/de/tum/in/isabelle/search/importer/theory_wrapper.scala \
   src/main/scala/de/tum/in/isabelle/search/importer/tools.scala
 resources = \
   src/main/resources/log4j2.properties

@@ -1,6 +1,13 @@
 theory IT_Spec imports Main
 begin
 
+(*SPEC:BEGIN:Check meta*)
+text \<open>Simple block\<close>
+(*SPEC:VERIFY
+    block.version should fullyMatch regex("[a-zA-Z0-9]{40}")
+    block.file should fullyMatch regex("https://www\\.isa-afp\\.org/browser_info/Isabelle[0-9]*/Unsorted/Spec-Tests/IT_Spec\\.html")
+SPEC:END*)
+
 (*SPEC:BEGIN:Check comment*)
 (* This is a comment *)
 (*SPEC:VERIFY
@@ -124,7 +131,7 @@ qed (simp)
     command should equal("theorem")
 
     // Check that the whole proof is in src
-    block.src should include ("qed")
+    block.src should include ("qed (simp)")
 
     // Check fact
     entities should have size 1

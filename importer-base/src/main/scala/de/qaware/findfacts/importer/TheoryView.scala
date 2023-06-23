@@ -214,7 +214,7 @@ object TheoryView {
 
     def text: String
 
-    def html: String
+    def markup: String
 
     def contains(entity: Entity): Boolean
 
@@ -223,7 +223,8 @@ object TheoryView {
   }
 
   object Block {
-    def unapply(arg: Block): Option[(Int, Int, Int, String)] = Some(arg.startPos, arg.endPos, arg.startLine, arg.text)
+    def unapply(arg: Block): Option[(Int, Int, Int, String, String)] =
+      Some(arg.startPos, arg.endPos, arg.startLine, arg.text, arg.markup)
   }
 
   trait Source extends Any {
@@ -361,7 +362,9 @@ object TheoryView {
 
   trait Theory extends Any {
     def name: String
+    def version: String
     def session: String
+    def file: String
     def source: Source
     def types: List[Type]
     def consts: List[Const]
@@ -373,7 +376,7 @@ object TheoryView {
 
   object Theory {
     def unapply(arg: Theory): Option[
-      (String, String, Source, List[Type], List[Const], List[Axiom], List[Thm], List[Constdef], List[Typedef])] =
-      Some(arg.name, arg.session, arg.source, arg.types, arg.consts, arg.axioms, arg.thms, arg.constdefs, arg.typedefs)
+      (String, String, String, String, Source, List[Type], List[Const], List[Axiom], List[Thm], List[Constdef], List[Typedef])] =
+      Some(arg.name, arg.version, arg.session, arg.file, arg.source, arg.types, arg.consts, arg.axioms, arg.thms, arg.constdefs, arg.typedefs)
   }
 }
