@@ -183,7 +183,7 @@ abstract class Theory_Wrapper(session_name: String) {
   import Theory_Wrapper._
 
   val version: String
-  def get_file(theory_name: String): String
+  def get_file(node_name: Document.Node.Name): String
   def get_markup(source: XML.Body): String
 
   class Block_wrapper(val inner: Markup_Blocks.Block) extends TheoryView.Block {
@@ -202,16 +202,16 @@ abstract class Theory_Wrapper(session_name: String) {
       inner.get_containing(Text.Range(position.offset, position.endOffset)).map(new Block_wrapper(_))
   }
 
-  def map_theory(theory_context: Export.Theory_Context): TheoryView.Theory = {
-    val isabelle_theory = Export_Theory.read_theory(theory_context)
-    val markup_xml = theory_context.yxml(Export.MARKUP)
+  def map_theory(
+    node_name: Document.Node.Name, isabelle_theory: Export_Theory.Theory, markup_xml: XML.Body
+  ): TheoryView.Theory = {
     val markup_blocks = Markup_Blocks.from_XML(markup_xml)
 
     new TheoryView.Theory {
       override val name: String = Long_Name.base_name(isabelle_theory.name)
       override val version: String = Theory_Wrapper.this.version
       override val session: String = session_name
-      override val file: String = get_file(isabelle_theory.name)
+      override val file: String = get_file(node_name)
       override val source: Source = new Source_Wrapper(markup_blocks)
       override val types: List[TheoryView.Type] = isabelle_theory.types.map(new Type_Wrapper(_))
       override val consts: List[TheoryView.Const] = isabelle_theory.consts.map(new Const_Wrapper(_))
@@ -234,9 +234,9 @@ class HTML_Wrapper(
   val info = structure.get(session_name).getOrElse(error("No info for " + quote(session_name)))
   val version = info.meta_info.toString
 
-  def get_file(theory_name: String): String = {
-    val thy_info = document_info.theory_by_name(session_name, theory_name).getOrElse(
-      error("No document info for " + quote(theory_name)))
+  def get_file(node_name: Document.Node.Name): String = {
+    val thy_info = document_info.theory_by_name(session_name, node_name.theory).getOrElse(
+      error("No document info for " + quote(node_name.theory)))
     val path = Path.basic(Isabelle_System.isabelle_name()) + session_dir + browser_context.theory_html(thy_info)
     link_base + "/" + path.implode
   }
@@ -249,17 +249,14 @@ class HTML_Wrapper(
   }
 }
 
-class Local_Wrapper(session_name: String, info: Sessions.Info, resources: Resources)
+class Local_Wrapper(session_name: String, meta_info: SHA1.Shasum)
   extends Theory_Wrapper(session_name) {
   private val MAX_DEPTH = 8
   private val MAX_LENGTH = 4096
 
-  val version: String = info.meta_info.toString
+  val version: String = meta_info.toString
 
-  def get_file(theory_name: String): String = {
-    val node = resources.find_theory_node(theory_name).get
-    node.path.implode
-  }
+  def get_file(node_name: Document.Node.Name): String = node_name.path.implode
 
   def get_markup(source: XML.Body): String = {
     def trim(source: XML.Body): XML.Body = source match {

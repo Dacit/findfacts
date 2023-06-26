@@ -36,7 +36,13 @@ object Build_Importer {
     val document_info = Document_Info.read(context.database_context, deps, List(session_name))
     val wrapper = new HTML_Wrapper(session_name, link_base, context.sessions_structure,  document_info)
 
-    val theories = theory_names.map(context.theory(_)).map(wrapper.map_theory)
+    val theories = theory_names.map { theory_name =>
+      val node_name = Document.Node.Name.loaded_theory(theory_name)
+      val theory_context = context.theory(theory_name)
+      val isabelle_theory = Export_Theory.read_theory(theory_context)
+      val xml_markup = theory_context.yxml(Export.MARKUP)
+      wrapper.map_theory(node_name, isabelle_theory, xml_markup)
+    }
 
     progress.echo_if(verbose, "finished loading theories, importing...")
     val errors = importer.importSession(index_name, theories)
