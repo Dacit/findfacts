@@ -145,7 +145,7 @@ class Findfacts_Variable {
       snapshot <- PIDE.maybe_snapshot()
       if !snapshot.is_outdated
     } {
-      val store = Sessions.store(PIDE.options.value)
+      val store = Store(PIDE.options.value)
       val background = PIDE.resources.session_background
 
       using(Export.open_session_context(store, background, Some(snapshot))) { session_context =>

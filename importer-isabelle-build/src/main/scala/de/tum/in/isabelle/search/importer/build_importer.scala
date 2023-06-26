@@ -23,7 +23,7 @@ object Build_Importer {
     session_name: String,
     link_base: String,
     index_name: String,
-    store: Sessions.Store,
+    store: Store,
     deps: Sessions.Deps,
     importer: ImporterModule,
     progress: Progress = new Progress,
@@ -188,7 +188,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         val sessions_structure = full_sessions.selection(selection)
         val deps = Sessions.deps(sessions_structure)
 
-        val store = Sessions.store(options)
+        val store = Store(options)
 
         // Import
         val session_names = sessions_structure.build_selection(selection).filter(_ != Thy_Header.PURE)
