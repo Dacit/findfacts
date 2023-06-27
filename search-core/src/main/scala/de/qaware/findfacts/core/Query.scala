@@ -40,11 +40,21 @@ final case class Or(f1: Filter, f2: Filter, fn: Filter*) extends Filter
 final case class And(f1: Filter, f2: Filter, fn: Filter*) extends Filter
 
 /**
- * Fuzzy filter term. May use '*' and '?' Wildcards. Space (usually) splits tokens.
+ * Fuzzy filter term. May use '*' and '?' Wildcards. Space splits tokens.
  *
  * @param inner string
  */
 final case class Term(inner: String) extends Filter
+object Term {
+  def apply(inner: String): Filter = {
+    if (inner.contains("*")) {
+      inner.split("\\s+").toList match {
+        case s :: Nil => new Term(s)
+        case s1 :: s2 :: sn => Or(new Term(s1), new Term(s2), sn.map(new Term(_)): _*)
+      }
+    } else new Term(inner)
+  }
+}
 
 /**
  * Exact filter term. Wildcards will be escaped.
