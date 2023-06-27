@@ -28,6 +28,7 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
 
   val RESULTS_SHOWN = 100
 
+
   /* text area */
 
   private val pretty_text_area = new Pretty_Text_Area(view)
@@ -76,7 +77,7 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
   override def detach_operation: Option[() => Unit] = pretty_text_area.detach_operation
 
   private def exports_message(no_exports: List[String]): String =
-    if (no_exports.isEmpty) "" else "Exports missing for " + commas_quote(no_exports)
+    (if (no_exports.isEmpty) "" else "Exports missing for ") + commas_quote(no_exports)
 
   private def handle_update(): Unit =
     for {
@@ -84,24 +85,23 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
       if !snapshot.is_outdated
       plugin <- Findfacts_Plugin.instance
     } plugin.findfacts.status match {
-      case Findfacts_Variable.Init => process_indicator.update("Initializing ...", 30)
-      case Findfacts_Variable.Indexing => process_indicator.update("Indexing ...", 5)
-      case Findfacts_Variable.Error(exn) =>
+      case Findfacts_Variable.Indexing => GUI_Thread.later(process_indicator.update("Indexing ...", 15))
+      case Findfacts_Variable.Error(exn) => GUI_Thread.later {
         process_indicator.update(null, 0)
         set_text(snapshot, XML.string("Error: " + exn.toString))
-      case Findfacts_Variable.Ready(num_theories, no_exports, indexed)
-        if _state != Some(indexed, query_string.getText) =>
-        index_label.text = " " + index_text(num_theories) + " "
-        process_indicator.update(null, 0)
+      }
+      case Findfacts_Variable.Ready(num_theories, no_exports, indexed) if _state != Some(indexed, query_string.getText) =>
+        GUI_Thread.later {
+          index_label.text = " " + index_text(num_theories) + " "
+          process_indicator.update(null, 0)
+        }
         if (!query_string.getText.isBlank) search()
         else {
-          set_text(snapshot, XML.string(exports_message(no_exports)))
+          GUI_Thread.later(set_text(snapshot, XML.string(exports_message(no_exports))))
           _state = Some(indexed, query)
         }
       case _ =>
     }
-
-  /* controls */
 
   private def search(): Unit = {
     for {
@@ -123,16 +123,15 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
   }
 
 
-  private val process_indicator = new Process_Indicator
+  /* controls */
 
-  def index_text(num_theories: Int): String = "Indexed " + num_theories + " theories. "
-  private val index_label = new Label("...") {
+  private val process_indicator = new Process_Indicator
+  process_indicator.update("Initializing ...", 15)
+
+  def index_text(num_theories: Int): String = "Indexed " + num_theories + " theories"
+  private val index_label = new Label("Initializing ...") {
     border = new SoftBevelBorder(BevelBorder.LOWERED)
     tooltip = GUI.tooltip_lines("Index state")
-  }
-
-  private val query_label = new Label("Query:") {
-    tooltip = GUI.tooltip_lines("Findfacts search query")
   }
 
   private val kind_selector = new GUI.Selector[Kind](Kind.values.toList.reverse.map(GUI.Selector.item)) {
@@ -140,6 +139,10 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
     tooltip = "Results must include selected kinds"
 
     override def changed(): Unit = handle_update()
+  }
+
+  private val query_label = new Label("Query:") {
+    tooltip = GUI.tooltip_lines("Findfacts search query")
   }
 
   private val query_string = new HistoryTextField("findfacts-query") {
@@ -165,8 +168,8 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
 
   private val controls =
     Wrap_Panel(
-      List(process_indicator.component, index_label, query_label, new Separator(Orientation.Vertical),
-        kind_selector, Component.wrap(query_string), search_button))
+      List(process_indicator.component, index_label, new Separator(Orientation.Vertical),
+        kind_selector, query_label, Component.wrap(query_string), search_button))
 
   add(controls.peer, BorderLayout.NORTH)
 
