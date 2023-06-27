@@ -10,7 +10,8 @@ package de.tum.in.isabelle.search.importer
 import _root_.scala.language.implicitConversions
 import de.qaware.findfacts.importer.TheoryView
 import de.qaware.findfacts.importer.TheoryView.Source
-import isabelle._
+import isabelle.*
+import isabelle.Term.{MinProof, dummy, dummyT}
 
 
 object Theory_Wrapper {
@@ -151,24 +152,24 @@ object Theory_Wrapper {
 
   class Type_Wrapper(val inner: Export_Theory.Entity[Export_Theory.Type]) extends AnyVal with TheoryView.Type {
     override def entity: TheoryView.Entity = new Entity_Wrapper(inner)
-    override def args: List[String] = inner.content.getOrElse(error("Exports missing")).args
-    override def abbrev: Option[TheoryView.Typ] = inner.content.getOrElse(error("Exports missing")).abbrev.map(map_typ)
+    override def args: List[String] = inner.content.map(_.args).getOrElse(Nil)
+    override def abbrev: Option[TheoryView.Typ] = inner.content.flatMap(_.abbrev).map(map_typ)
   }
   class Const_Wrapper(val inner: Export_Theory.Entity[Export_Theory.Const]) extends AnyVal with TheoryView.Const {
     override def entity: TheoryView.Entity = new Entity_Wrapper(inner)
-    override def typargs: List[String] = inner.content.getOrElse(error("Exports missing")).typargs
-    override def typ: TheoryView.Typ = map_typ(inner.content.getOrElse(error("Exports missing")).typ)
+    override def typargs: List[String] = inner.content.map(_.typargs).getOrElse(Nil)
+    override def typ: TheoryView.Typ = map_typ(inner.content.map(_.typ).getOrElse(dummyT))
     override def abbrev: Option[TheoryView.Term] = inner.content.flatMap(_.abbrev).map(map_term)
   }
   class Axiom_Wrapper(val inner: Export_Theory.Entity[Export_Theory.Axiom]) extends AnyVal with TheoryView.Axiom {
     override def entity: TheoryView.Entity = new Entity_Wrapper(inner)
-    override def prop: TheoryView.Prop = new Prop_Wrapper(inner.content.getOrElse(error("Exports missing")).prop)
+    override def prop: TheoryView.Prop = new Prop_Wrapper(inner.content.map(_.prop).getOrElse(Export_Theory.Prop(Nil, Nil, dummy)))
   }
   class Thm_Wrapper(val inner: Export_Theory.Entity[Export_Theory.Thm]) extends AnyVal with TheoryView.Thm {
     override def entity: TheoryView.Entity = new Entity_Wrapper(inner)
-    override def prop: TheoryView.Prop = new Prop_Wrapper(inner.content.getOrElse(error("Exports missing")).prop)
-    override def deps: List[String] = inner.content.getOrElse(error("Exports missing")).deps
-    override def proof: TheoryView.Proof = map_proof(inner.content.getOrElse(error("Exports missing")).proof)
+    override def prop: TheoryView.Prop = new Prop_Wrapper(inner.content.map(_.prop).getOrElse(Export_Theory.Prop(Nil, Nil, dummy)))
+    override def deps: List[String] = inner.content.map(_.deps).getOrElse(Nil)
+    override def proof: TheoryView.Proof = map_proof(inner.content.map(_.proof).getOrElse(MinProof))
   }
   class Constdef_Wrapper(val inner: Export_Theory.Constdef) extends AnyVal with TheoryView.Constdef {
     override def name: String = inner.name

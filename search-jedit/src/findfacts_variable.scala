@@ -19,15 +19,13 @@ object Findfacts_Variable {
   case object Init extends Status
   case object Indexing extends Status
   case class Error(exn: Throwable) extends Status
-  case class Ready(num_theories: Int, no_exports: List[String], indexed: Document.Version) extends Status
+  case class Ready(num_theories: Int, indexed: Document.Version) extends Status
 }
 
 class Findfacts_Variable {
   import Findfacts_Variable.*
 
   val DRAFT_SHASUM = SHA1.fake_shasum("Draft")
-  val NO_EXPORT = SHA1.fake_shasum("No_Export")
-  def not_exported(version: SHA1.Shasum): Boolean = version == NO_EXPORT
 
   private val solr_dir = Path.explode("$ISABELLE_HOME_USER/findfacts")
   Isabelle_System.make_directory(solr_dir)
@@ -63,7 +61,7 @@ class Findfacts_Variable {
   private var _status: Status = Init
   def status: Status = _status
   def indexed: Option[Document.Version] = _status match {
-    case Ready(_, _, indexed) => Some(indexed)
+    case Ready(_, indexed) => Some(indexed)
     case _ => None
   }
 
@@ -123,29 +121,21 @@ class Findfacts_Variable {
         if session_context.sessions_structure.theory_qualifier(theory_name) == session_name
       } yield theory_name
 
-    def is_imported(theory_name: String): Boolean = {
-      val res = _indexed_theories.get(session_name, Long_Name.base_name(theory_name))
-      res.contains(info.meta_info) || res.contains(NO_EXPORT)
-    }
+    def is_imported(theory_name: String): Boolean =
+      _indexed_theories.get(session_name, Long_Name.base_name(theory_name)).contains(info.meta_info)
 
     if (!proper_theories.forall(is_imported)) {
-      val imported =
-        for {
-          theory_name <- proper_theories
-          node_name <- PIDE.resources.find_theory_node(theory_name)
-        } yield {
-          val theory_context = session_context.theory(theory_name)
-          val xml = theory_context.yxml(Export.MARKUP)
-          if (xml.isEmpty) false
-          else {
-            do_import(session_name, info.meta_info, node_name, theory_context, xml)
-            true
-          }
-        }
+      for {
+        theory_name <- proper_theories
+        node_name <- PIDE.resources.find_theory_node(theory_name)
+      } {
+        val theory_context = session_context.theory(theory_name)
+        val xml = theory_context.yxml(Export.MARKUP)
+        do_import(session_name, info.meta_info, node_name, theory_context, xml)
+      }
 
-      val success = imported.forall(identity)
       _indexed_theories = _indexed_theories ++ proper_theories.map(theory_name =>
-        (session_name, Long_Name.base_name(theory_name)) -> (if (success) info.meta_info else NO_EXPORT))
+        (session_name, Long_Name.base_name(theory_name)) -> info.meta_info)
     }
   }
 
@@ -181,8 +171,7 @@ class Findfacts_Variable {
         } match {
           case Exn.Exn(exn) => _status = Error(exn)
           case Exn.Res(_) =>
-            val no_exports = _indexed_theories.filter(_._2 == NO_EXPORT).keys.map(_._1).toList.distinct
-            _status = Ready(_indexed_theories.values.filterNot(not_exported).size, no_exports, snapshot.version)
+            _status = Ready(_indexed_theories.size, snapshot.version)
         }
       }
       GUI_Thread.later(post_update())

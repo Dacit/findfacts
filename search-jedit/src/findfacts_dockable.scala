@@ -76,9 +76,6 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
 
   override def detach_operation: Option[() => Unit] = pretty_text_area.detach_operation
 
-  private def exports_message(no_exports: List[String]): String =
-    (if (no_exports.isEmpty) "" else "Exports missing for ") + commas_quote(no_exports)
-
   private def handle_update(): Unit =
     for {
       snapshot <- PIDE.maybe_snapshot()
@@ -90,14 +87,14 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
         process_indicator.update(null, 0)
         set_text(snapshot, XML.string("Error: " + exn.toString))
       }
-      case Findfacts_Variable.Ready(num_theories, no_exports, indexed) if _state != Some(indexed, query_string.getText) =>
+      case Findfacts_Variable.Ready(num_theories, indexed) if _state != Some(indexed, query_string.getText) =>
         GUI_Thread.later {
           index_label.text = " " + index_text(num_theories) + " "
           process_indicator.update(null, 0)
         }
         if (!query_string.getText.isBlank) search()
         else {
-          GUI_Thread.later(set_text(snapshot, XML.string(exports_message(no_exports))))
+          GUI_Thread.later(set_text(snapshot, Nil))
           _state = Some(indexed, query)
         }
       case _ =>
