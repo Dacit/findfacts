@@ -23,4 +23,4 @@ jobs:
             .isabelle/contrib
             .isabelle/heaps
           key: ISABELLE_HOME_USER
-      - run: ./sbt -Dprofiles=memory,loader "project importer-isabelle-base" assembly "project findfacts" it:test
+      - run: ./sbt -Dprofiles=memory,loader "project search-jedit" assembly "project findfacts" it:test
