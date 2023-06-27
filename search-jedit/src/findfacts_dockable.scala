@@ -8,6 +8,7 @@ package isabelle.jedit_findfacts
 
 import isabelle.jedit.*
 import isabelle.*
+
 import scala.swing.{Component, Label, Orientation, SplitPane, Separator}
 import scala.util.{Failure, Success}
 import java.awt.event.KeyEvent
@@ -19,6 +20,7 @@ import de.qaware.findfacts.common.dt.{EtField, Kind}
 import de.qaware.findfacts.core.{Exact, FieldFilter, FilterQuery}
 import de.qaware.findfacts.core.QueryService.ResultList
 import de.qaware.findfacts.core.dt.ShortBlock
+
 import org.gjt.sp.jedit.View
 import org.gjt.sp.jedit.gui.HistoryTextField
 
@@ -81,23 +83,25 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
       snapshot <- PIDE.maybe_snapshot()
       if !snapshot.is_outdated
       plugin <- Findfacts_Plugin.instance
-    } plugin.findfacts.status match {
-      case Findfacts_Variable.Indexing => GUI_Thread.later(process_indicator.update("Indexing ...", 15))
-      case Findfacts_Variable.Error(exn) => GUI_Thread.later {
-        process_indicator.update(null, 0)
-        set_text(snapshot, XML.string("Error: " + exn.toString))
-      }
-      case Findfacts_Variable.Ready(num_theories, indexed) if _state != Some(indexed, query_string.getText) =>
-        GUI_Thread.later {
-          index_label.text = " " + index_text(num_theories) + " "
+    } {
+      plugin.findfacts.status match {
+        case Findfacts_Variable.Indexing => GUI_Thread.later(process_indicator.update("Indexing ...", 15))
+        case Findfacts_Variable.Error(exn) => GUI_Thread.later {
           process_indicator.update(null, 0)
+          set_text(snapshot, XML.string("Error: " + exn.toString))
         }
-        if (!query_string.getText.isBlank) search()
-        else {
-          GUI_Thread.later(set_text(snapshot, Nil))
-          _state = Some(indexed, query)
-        }
-      case _ =>
+        case Findfacts_Variable.Ready(num_theories, indexed) if _state != Some(indexed, query_string.getText) =>
+          GUI_Thread.later {
+            index_label.text = " " + index_text(num_theories) + " "
+            process_indicator.update(null, 0)
+          }
+          if (!query_string.getText.isBlank) search()
+          else {
+            GUI_Thread.later(set_text(snapshot, XML.string(plugin.findfacts.context.debug_info)))
+            _state = Some(indexed, query)
+          }
+        case _ =>
+      }
     }
 
   private def search(): Unit = {
@@ -106,10 +110,8 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
       if !snapshot.is_outdated
       plugin <- Findfacts_Plugin.instance
       state <- plugin.findfacts.indexed
-      findfacts = plugin.findfacts.search_service
-      indexes <- findfacts.listIndexes
-      index <- indexes.headOption
-    } findfacts.getResultShortlist(query.filter_query)(index) match {
+      findfacts = plugin.findfacts.context
+    } findfacts.search(query.filter_query) match {
       case Failure(exception) =>
         _state = Some(state, query)
         GUI_Thread.later(set_text(snapshot, XML.string("Query failed: " + exception.toString)))
