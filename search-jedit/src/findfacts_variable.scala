@@ -135,7 +135,7 @@ class Findfacts_Variable {
           node_name <- PIDE.resources.find_theory_node(theory_name)
         } yield {
           val theory_context = session_context.theory(theory_name)
-          val xml = theory_context.yxml(Markup.EXPORT)
+          val xml = theory_context.yxml(Export.MARKUP)
           if (xml.isEmpty) false
           else {
             do_import(session_name, info.meta_info, node_name, theory_context, xml)
