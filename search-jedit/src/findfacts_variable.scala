@@ -131,7 +131,7 @@ class Findfacts_Variable {
         }
 
       _indexed_theories = _indexed_theories ++ proper_theories.map(theory_name =>
-        (session_name, Long_Name.base_name(theory_name)) -> DRAFT_SHASUM)
+        (session_name, Long_Name.base_name(theory_name)) -> info.meta_info)
 
       imported.forall(identity)
     }
