@@ -8,19 +8,17 @@ package isabelle.jedit_findfacts
 
 import isabelle.jedit.*
 import isabelle.*
-
-import scala.swing.{Component, Label}
+import scala.swing.{Component, Label, Orientation, SplitPane, Separator}
 import scala.util.{Failure, Success}
-
 import java.awt.event.KeyEvent
 import java.awt.BorderLayout
+import javax.swing.border.{BevelBorder, SoftBevelBorder}
 
 import de.qaware.findfacts.core
 import de.qaware.findfacts.common.dt.{EtField, Kind}
 import de.qaware.findfacts.core.{Exact, FieldFilter, FilterQuery}
 import de.qaware.findfacts.core.QueryService.ResultList
 import de.qaware.findfacts.core.dt.ShortBlock
-
 import org.gjt.sp.jedit.View
 import org.gjt.sp.jedit.gui.HistoryTextField
 
@@ -32,8 +30,10 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
 
   /* text area */
 
-  val pretty_text_area = new Pretty_Text_Area(view)
-  set_content(pretty_text_area)
+  private val pretty_text_area = new Pretty_Text_Area(view)
+
+
+  /* state handling */
 
   def set_text(snapshot: Document.Snapshot, text: XML.Body): Unit = {
     GUI_Thread.require {}
@@ -75,18 +75,28 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
 
   override def detach_operation: Option[() => Unit] = pretty_text_area.detach_operation
 
+  private def exports_message(no_exports: List[String]): String =
+    if (no_exports.isEmpty) "" else "Exports missing for " + commas_quote(no_exports)
+
   private def handle_update(): Unit =
     for {
       snapshot <- PIDE.maybe_snapshot()
       if !snapshot.is_outdated
       plugin <- Findfacts_Plugin.instance
-    } plugin.findfacts.indexed match {
-      case None => GUI_Thread.later(set_text(snapshot, XML.string(plugin.findfacts.index_message)))
-      case Some(state) if _state != Some(state, query_string.getText) =>
+    } plugin.findfacts.status match {
+      case Findfacts_Variable.Init => process_indicator.update("Initializing ...", 30)
+      case Findfacts_Variable.Indexing => process_indicator.update("Indexing ...", 5)
+      case Findfacts_Variable.Error(exn) =>
+        process_indicator.update(null, 0)
+        set_text(snapshot, XML.string("Error: " + exn.toString))
+      case Findfacts_Variable.Ready(num_theories, no_exports, indexed)
+        if _state != Some(indexed, query_string.getText) =>
+        index_label.text = " " + index_text(num_theories) + " "
+        process_indicator.update(null, 0)
         if (!query_string.getText.isBlank) search()
         else {
-          _state = Some(state, query)
-          GUI_Thread.later(set_text(snapshot, XML.string(plugin.findfacts.index_message)))
+          set_text(snapshot, XML.string(exports_message(no_exports)))
+          _state = Some(indexed, query)
         }
       case _ =>
     }
@@ -112,10 +122,24 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
     }
   }
 
+
+  private val process_indicator = new Process_Indicator
+
+  def index_text(num_theories: Int): String = "Indexed " + num_theories + " theories. "
+  private val index_label = new Label("...") {
+    border = new SoftBevelBorder(BevelBorder.LOWERED)
+    tooltip = GUI.tooltip_lines("Index state")
+  }
+
   private val query_label = new Label("Query:") {
-    tooltip =
-      GUI.tooltip_lines(
-        "Findfacts search query")
+    tooltip = GUI.tooltip_lines("Findfacts search query")
+  }
+
+  private val kind_selector = new GUI.Selector[Kind](Kind.values.toList.reverse.map(GUI.Selector.item)) {
+    name = "findfacts_kind"
+    tooltip = "Results must include selected kinds"
+
+    override def changed(): Unit = handle_update()
   }
 
   private val query_string = new HistoryTextField("findfacts-query") {
@@ -128,22 +152,21 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
     setColumns(30)
   }
 
-  private val apply_query = new GUI.Button("<html><b>Search</b></html>") {
+  private val search_button = new GUI.Button("<html><b>Search</b></html>") {
     tooltip = "Search FindFacts"
 
     override def clicked(): Unit = handle_update()
   }
 
-  private val kind_selector = new GUI.Selector[Kind](Kind.values.toList.reverse.map(GUI.Selector.item)) {
-    name = "findfacts_kind"
-    tooltip = "Results must include selected kinds"
 
-    override def changed(): Unit = handle_update()
-  }
+  /* layout */
+
+  set_content(pretty_text_area)
 
   private val controls =
     Wrap_Panel(
-      List(kind_selector, query_label, Component.wrap(query_string), apply_query))
+      List(process_indicator.component, index_label, query_label, new Separator(Orientation.Vertical),
+        kind_selector, Component.wrap(query_string), search_button))
 
   add(controls.peer, BorderLayout.NORTH)
 

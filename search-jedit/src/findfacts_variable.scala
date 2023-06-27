@@ -14,8 +14,17 @@ import isabelle.{Console_Progress, Document, Export, Export_Theory, Isabelle_Sys
 import isabelle.jedit.PIDE
 import org.slf4j.LoggerFactory
 
+object Findfacts_Variable {
+  sealed trait Status
+  case object Init extends Status
+  case object Indexing extends Status
+  case class Error(exn: Throwable) extends Status
+  case class Ready(num_theories: Int, no_exports: List[String], indexed: Document.Version) extends Status
+}
 
 class Findfacts_Variable {
+  import Findfacts_Variable.*
+  
   val DRAFT_SHASUM = SHA1.fake_shasum("Draft")
 
   private val solr_dir = Path.explode("$ISABELLE_HOME_USER/findfacts")
@@ -28,9 +37,6 @@ class Findfacts_Variable {
   if (!repo.listIndexes.contains(INDEX)) {
     repo.createIndex(INDEX)
   }
-
-  private var _indexed: Option[Document.Version] = None
-  def indexed: Option[Document.Version] = _indexed
 
   val search_service: QueryService = new SolrQueryService(repo,
     new SolrQueryMapper(new SolrFieldFilterMapper(new SolrFilterMapper())))
@@ -51,10 +57,13 @@ class Findfacts_Variable {
 
     present.map(block => (block.session, block.theory) -> SHA1.fake_shasum(block.version)).toMap
   }
-  private var _indexed_draft: Map[Document.Node.Name, Document.Version] = Map.empty
 
-  private var _index_message: String = "Indexing..."
-  def index_message: String = _index_message
+  private var _status: Status = Init
+  def status: Status = _status
+  def indexed: Option[Document.Version] = _status match {
+    case Ready(_, _, indexed) => Some(indexed)
+    case _ => None
+  }
 
 
   /* import */
@@ -168,12 +177,8 @@ class Findfacts_Variable {
             if !try_import_session(background, session_name, info, session_context)
           } yield session_name
         } match {
-          case Exn.Exn(exn) => _index_message = "Error indexing: " + exn.toString
-          case Exn.Res(no_exports) =>
-            _indexed = Some(snapshot.version)
-            val exports_message =
-              if (no_exports.nonEmpty) "\nNo exports for: " + commas_quote(no_exports) + " (skipped)." else ""
-            _index_message = "Indexed " + _indexed_theories.size + " theories." + exports_message
+          case Exn.Exn(exn) => _status = Error(exn)
+          case Exn.Res(no_exports) => _status = Ready(_indexed_theories.size, no_exports, snapshot.version)
         }
       }
       GUI_Thread.later(post_update())
