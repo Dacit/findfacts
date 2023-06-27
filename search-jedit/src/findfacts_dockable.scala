@@ -139,7 +139,7 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
   }
 
   private val query_label = new Label("Query:") {
-    tooltip = GUI.tooltip_lines("Findfacts search query")
+    tooltip = GUI.tooltip_lines("Findfacts search query. May use * as wildcard.")
   }
 
   private val query_string = new HistoryTextField("findfacts-query") {
