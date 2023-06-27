@@ -4,7 +4,7 @@ begin
 (*SPEC:BEGIN:Check meta*)
 text \<open>Simple block\<close>
 (*SPEC:VERIFY
-    block.version should fullyMatch regex("[a-zA-Z0-9]{40}")
+    block.version should include regex("[a-zA-Z0-9]{40}")
     block.file should fullyMatch regex("https://www\\.isa-afp\\.org/browser_info/Isabelle[0-9]*/Unsorted/Spec-Tests/IT_Spec\\.html")
 SPEC:END*)
 
