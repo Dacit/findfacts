@@ -97,7 +97,8 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
           }
           if (!query_string.getText.isBlank) search()
           else {
-            GUI_Thread.later(set_text(snapshot, XML.string(plugin.findfacts.context.debug_info)))
+            val text = if (debug.selected) XML.string(plugin.findfacts.context.debug_info) else Nil
+            GUI_Thread.later(set_text(snapshot, text))
             _state = Some(indexed, query)
           }
         case _ =>
@@ -123,6 +124,12 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
 
 
   /* controls */
+
+  private val debug = new GUI.Check("Debug") {
+    tooltip = "Display debugging information"
+
+    override def clicked(): Unit = handle_update()
+  }
 
   private val process_indicator = new Process_Indicator
   process_indicator.update("Initializing ...", 15)
@@ -167,7 +174,7 @@ class Findfacts_Dockable(view: View, position: String) extends Dockable(view, po
 
   private val controls =
     Wrap_Panel(
-      List(process_indicator.component, index_label, new Separator(Orientation.Vertical),
+      List(debug, process_indicator.component, index_label, new Separator(Orientation.Vertical),
         kind_selector, query_label, Component.wrap(query_string), search_button))
 
   add(controls.peer, BorderLayout.NORTH)
