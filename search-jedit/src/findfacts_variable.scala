@@ -134,7 +134,7 @@ object Findfacts_Variable {
       val query = FilterQuery(List(FieldFilter(EtField.StartLine, core.Term("1"))), pageSize = Int.MaxValue)
       def is_missing(b: ShortBlock): Boolean = is_draft(b) && !Path.explode(b.file).file.exists()
 
-      val (present, missing) = service.getResultShortlist(query).get.values.partition(is_missing)
+      val (missing, present) = service.getResultShortlist(query).get.values.partition(is_missing)
       missing.toList.map(b => Exact(b.file)) match {
         case Nil =>
         case elem :: Nil => service.deleteBlock(List(FieldFilter(EtField.SourceFile, elem)))
