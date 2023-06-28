@@ -118,6 +118,8 @@ object Findfacts_Variable {
     private val DRAFT_SHASUM = SHA1.fake_shasum("Draft")
     private implicit val INDEX: String = "local"
 
+    def is_draft(block: ShortBlock): Boolean = block.version == DRAFT_SHASUM.toString
+
     def load(dir: Path): Context = {
       // setup index
       Isabelle_System.make_directory(dir)
@@ -130,10 +132,10 @@ object Findfacts_Variable {
       val service = new SolrQueryService(repo, new SolrQueryMapper(new SolrFieldFilterMapper(new SolrFilterMapper())))
 
       val query = FilterQuery(List(FieldFilter(EtField.StartLine, core.Term("1"))), pageSize = Int.MaxValue)
-      def is_deleted(b: ShortBlock): Boolean = b.version == DRAFT_SHASUM.toString && !Path.explode(b.file).file.exists()
+      def is_missing(b: ShortBlock): Boolean = is_draft(b) && !Path.explode(b.file).file.exists()
 
-      val (present, deleted) = service.getResultShortlist(query).get.values.partition(is_deleted)
-      deleted.toList.map(b => Exact(b.file)) match {
+      val (present, missing) = service.getResultShortlist(query).get.values.partition(is_missing)
+      missing.toList.map(b => Exact(b.file)) match {
         case Nil =>
         case elem :: Nil => service.deleteBlock(List(FieldFilter(EtField.SourceFile, elem)))
         case elem1 :: elem2 :: elems =>
