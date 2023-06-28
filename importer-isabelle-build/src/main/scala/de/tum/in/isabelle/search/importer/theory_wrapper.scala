@@ -252,8 +252,6 @@ class HTML_Wrapper(
 
 class Local_Wrapper(session_name: String, meta_info: SHA1.Shasum)
   extends Theory_Wrapper(session_name) {
-  private val MAX_DEPTH = 8
-  private val MAX_LENGTH = 4096
 
   val version: String = meta_info.toString
 

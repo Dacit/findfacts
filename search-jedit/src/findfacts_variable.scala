@@ -1,3 +1,8 @@
+/* Title:      jedit_findfacts/findfacts_variable.scala
+   Author:     Fabian Huch, TU Munich
+
+Findfacts plugin variable with global index state.
+ */
 package isabelle.jedit_findfacts
 
 
@@ -19,6 +24,7 @@ import de.qaware.findfacts.importer.solrimpl.SolrImporterModule
 import de.tum.in.isabelle.search.importer.Local_Wrapper
 
 import org.slf4j.LoggerFactory
+
 
 object Findfacts_Variable {
   sealed trait Status
@@ -142,7 +148,8 @@ object Findfacts_Variable {
           service.deleteBlock(List(FieldFilter(EtField.SourceFile, core.Or(elem1, elem2, elems: _*))))
       }
 
-      val indexed = present.map(block => (block.session.toString, block.theory.toString) -> SHA1.fake_shasum(block.version)).toMap
+      val indexed = present.map(block =>
+        (block.session.toString, block.theory.toString) -> SHA1.fake_shasum(block.version)).toMap
       new Context(importer, service, indexed)
     }
   }
