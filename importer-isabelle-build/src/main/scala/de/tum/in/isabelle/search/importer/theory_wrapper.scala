@@ -250,10 +250,8 @@ class HTML_Wrapper(
   }
 }
 
-class Local_Wrapper(session_name: String, meta_info: SHA1.Shasum)
+class Local_Wrapper(session_name: String, override val version: String)
   extends Theory_Wrapper(session_name) {
-
-  val version: String = meta_info.toString
 
   def get_file(node_name: Document.Node.Name): String = node_name.path.implode
 
