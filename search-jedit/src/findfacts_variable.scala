@@ -140,9 +140,8 @@ object Findfacts_Variable {
     def search(query: FilterQuery): Try[ResultList[ShortBlock]] = service.getResultShortlist(query)(INDEX)
     def num_indexed: Int = _indexed_theories.size
     def debug_info: String =
-      _indexed_theories.map {
-        case (k,v) => k.toString + ": " + v.toString
-      }.mkString("\n")
+      _indexed_theories.toList.sortBy(_._2.is_draft).reverse.map((k,v) =>
+        k.toString + ": " + v.toString.replace('\n', ' ')).mkString("\n")
   }
 
   object Context {
