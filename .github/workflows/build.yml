@@ -23,4 +23,4 @@ jobs:
             .isabelle/contrib
             .isabelle/heaps
           key: ISABELLE_HOME_USER
-      - run: ./sbt -Dprofiles=memory,loader "project search-jedit" assembly "project findfacts" it:test
+      - run: ./sbt -Djdk.util.zip.disableZip64ExtraFieldValidation=true -Dprofiles=memory,loader "project search-jedit" assembly "project findfacts" it:test
