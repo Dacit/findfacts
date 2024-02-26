@@ -15,6 +15,8 @@ import de.qaware.findfacts.importer.{ImporterModule, TheoryView}
 import de.qaware.findfacts.importer.solrimpl.SolrImporterModule
 import de.qaware.findfacts.common.solr.{LocalSolr, RemoteSolr, SolrRepository}
 
+import scala.collection.mutable
+
 
 object Build_Importer {
   /* import a session with a generic importer */
@@ -74,20 +76,22 @@ object Build_Importer {
       var remote_solr: List[String] = Nil
       var verbose = false
 
-      var base_sessions: List[String] = Nil
-      var select_dirs: List[Path] = Nil
+      var afp_root: Option[Path] = None
+      val base_sessions = new mutable.ListBuffer[String]
+      val select_dirs = new mutable.ListBuffer[Path]
+      val build_hosts = new mutable.ListBuffer[Build_Cluster.Host]
       var numa_shuffling = false
       var requirements = false
       var soft_build = false
-      var exclude_session_groups: List[String] = Nil
+      val exclude_session_groups = new mutable.ListBuffer[String]
       var all_sessions = false
       var clean_build = false
-      var dirs: List[Path] = Nil
+      val dirs = new mutable.ListBuffer[Path]
       var fresh_build = false
-      var session_groups: List[String] = Nil
-      var max_jobs = 1
+      val session_groups = new mutable.ListBuffer[String]
+      var max_jobs: Option[Int] = None
       var options = Options.init(specs = Options.Spec.ISABELLE_BUILD_OPTIONS)
-      var exclude_sessions: List[String] = Nil
+      val exclude_sessions = new mutable.ListBuffer[String]
 
       val getopts = Getopts(
         """
@@ -101,8 +105,11 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
     -v              verbose
 
   Build options are:
+    -A ROOT      include AFP with given root directory (":" for """ + AFP.BASE.implode + """)
     -B NAME      include session NAME and all descendants
     -D DIR       include session directory and select its sessions
+    -H HOSTS     additional cluster host specifications of the form
+                 NAMES:PARAMETERS (separated by commas)
     -N           cyclic shuffling of NUMA CPU nodes (performance tuning)
     -R           refer to requirements of selected sessions
     -S           soft build: only observe changes of sources, not heap images
@@ -112,7 +119,8 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
     -d DIR       include session directory
     -f           fresh build
     -g NAME      select session group NAME
-    -j INT       maximum number of parallel jobs (default 1)
+    -j INT       maximum number of parallel jobs
+                 (default: 1 for local build, 0 for build cluster)
     -o OPTION    override Isabelle system OPTION (via NAME=VAL or NAME)
     -x NAME      exclude session NAME and all descendants
 
@@ -126,21 +134,22 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         "l:" -> (arg => local_solr = arg),
         "r:" -> (arg => remote_solr = Library.distinct(space_explode(':', arg))),
         "v" -> (_ => verbose = true),
-        "B:" -> (arg => base_sessions = base_sessions ::: List(arg)),
-        "D:" -> (arg => select_dirs = select_dirs ::: List(Path.explode(arg))),
+        "A:" -> (arg => afp_root = Some(if (arg == ":") AFP.BASE else Path.explode(arg))),
+        "B:" -> (arg => base_sessions += arg),
+        "D:" -> (arg => select_dirs += Path.explode(arg)),
+        "H:" -> (arg => build_hosts ++= Build_Cluster.Host.parse(Registry.global, arg)),
         "N" -> (_ => numa_shuffling = true),
         "R" -> (_ => requirements = true),
         "S" -> (_ => soft_build = true),
-        "X:" -> (arg => exclude_session_groups = exclude_session_groups ::: List(arg)),
+        "X:" -> (arg => exclude_session_groups += arg),
         "a" -> (_ => all_sessions = true),
         "c" -> (_ => clean_build = true),
-        "d:" -> (arg => dirs = dirs ::: List(Path.explode(arg))),
+        "d:" -> (arg => dirs += Path.explode(arg)),
         "f" -> (_ => fresh_build = true),
-        "g:" -> (arg => session_groups = session_groups ::: List(arg)),
-        "j:" -> (arg => max_jobs = Value.Int.parse(arg)),
+        "g:" -> (arg => session_groups += arg),
+        "j:" -> (arg => max_jobs = Some(Value.Nat.parse(arg))),
         "o:" -> (arg => options = options + arg),
-        "x:" -> (arg => exclude_sessions = exclude_sessions ::: List(arg))
-      )
+        "x:" -> (arg => exclude_sessions += arg))
 
       options = options + "export_theory"
       val afp_link = "https://www.isa-afp.org/browser_info"
@@ -162,11 +171,11 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         val selection = Sessions.Selection(
           requirements = requirements,
           all_sessions = all_sessions,
-          base_sessions = base_sessions,
-          exclude_session_groups = exclude_session_groups,
-          exclude_sessions = exclude_sessions,
-          session_groups = session_groups,
-          sessions = sessions)
+          base_sessions = base_sessions.toList,
+          exclude_session_groups = exclude_session_groups.toList,
+          exclude_sessions = exclude_sessions.toList,
+          session_groups = session_groups.toList,
+          sessions = sessions.toList)
 
         // Build
         val res = Build.build(
@@ -174,16 +183,18 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
           selection = selection,
           progress = progress,
           clean_build = clean_build,
-          dirs = dirs,
-          select_dirs = select_dirs,
-          numa_shuffling = numa_shuffling,
+          afp_root = afp_root,
+          dirs = dirs.toList,
+          select_dirs = select_dirs.toList,
+          numa_shuffling = Host.numa_check(progress, numa_shuffling),
           max_jobs = max_jobs,
           fresh_build = fresh_build,
-          soft_build = soft_build)
+          soft_build = soft_build,
+          build_hosts = build_hosts.toList)
 
         if (!res.ok) error("Build failed")
 
-        val full_sessions = Sessions.load_structure(options, dirs = dirs, select_dirs = select_dirs)
+        val full_sessions = Sessions.load_structure(options, dirs = dirs.toList, select_dirs = select_dirs.toList)
 
         val sessions_structure = full_sessions.selection(selection)
         val deps = Sessions.deps(sessions_structure)
