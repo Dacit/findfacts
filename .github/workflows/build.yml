@@ -17,6 +17,8 @@ jobs:
       - run: |
           git clone --depth 1 https://github.com/isabelle-prover/mirror-isabelle.git isabelle
           isabelle/Admin/init
+          echo 'ISABELLE_TOOL_JAVA_OPTIONS="-Xms1600m -Xmx2000m"' >> ~/.isabelle/etc/settings
+          echo 'ML_OPTIONS="--minheap 1800M --maxheap 1800M"' >> ~/.isabelle/etc/settings
           isabelle/bin/isabelle components -u importer-isabelle-build
           isabelle/bin/isabelle components -u search-jedit
       - uses: actions/cache@v3
@@ -27,4 +29,6 @@ jobs:
             ~/.isabelle/contrib
             ~/.isabelle/heaps
           key: ISABELLE_HOME_USER
-      - run: ./sbt -Djdk.util.zip.disableZip64ExtraFieldValidation=true -Dprofiles=memory,loader "project findfacts" it:test
+      - run: |
+          export PATH="$PATH:$(pwd)/isabelle/bin"
+          ./sbt -Djdk.util.zip.disableZip64ExtraFieldValidation=true -Dprofiles=memory,loader "project findfacts" it:test
