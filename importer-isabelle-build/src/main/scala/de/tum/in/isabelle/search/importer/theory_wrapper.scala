@@ -136,7 +136,7 @@ object Theory_Wrapper {
   }
   class PThm_Wrapper(val inner: Term.PThm) extends AnyVal with TheoryView.PThm {
     override def theoryName: String = inner.theory_name
-    override def name: String = inner.name
+    override def name: String = inner.thm_name.print
     override def types: List[TheoryView.Typ] = inner.types.map(map_typ)
   }
 
@@ -168,7 +168,7 @@ object Theory_Wrapper {
   class Thm_Wrapper(val inner: Export_Theory.Entity[Export_Theory.Thm]) extends AnyVal with TheoryView.Thm {
     override def entity: TheoryView.Entity = new Entity_Wrapper(inner)
     override def prop: TheoryView.Prop = new Prop_Wrapper(inner.content.map(_.prop).getOrElse(Export_Theory.Prop(Nil, Nil, dummy)))
-    override def deps: List[String] = inner.content.map(_.deps).getOrElse(Nil)
+    override def deps: List[String] = inner.content.map(_.deps).getOrElse(Nil).map(_.print)
     override def proof: TheoryView.Proof = map_proof(inner.content.map(_.proof).getOrElse(MinProof))
   }
   class Constdef_Wrapper(val inner: Export_Theory.Constdef) extends AnyVal with TheoryView.Constdef {
