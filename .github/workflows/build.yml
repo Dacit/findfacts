@@ -13,14 +13,16 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: 'devel'
-      - run: rm -r isabelle
-      - run: git clone --depth 1 https://github.com/isabelle-prover/mirror-isabelle.git isabelle
+      - run: |
+          git clone --depth 1 https://github.com/isabelle-prover/mirror-isabelle.git isabelle
+          isabelle/Admin/init
+          isabelle/bin/isabelle components -u findfacts/importer-base-build
       - uses: actions/cache@v3
         with:
           path: |
             .sbt
             .ivy2
-            .isabelle/contrib
-            .isabelle/heaps
+            ~/.isabelle/contrib
+            ~/.isabelle/heaps
           key: ISABELLE_HOME_USER
       - run: ./sbt -Djdk.util.zip.disableZip64ExtraFieldValidation=true -Dprofiles=memory,loader "project search-jedit" assembly "project findfacts" it:test

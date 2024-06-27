@@ -1,6 +1,0 @@
-#-*- shell-script -*- :mode=shellscript:
-
-init_components "$ISABELLE_COMPONENTS_BASE" "$ISABELLE_HOME/Admin/components/main"
-
-ISABELLE_TOOL_JAVA_OPTIONS="-Xms1600m -Xmx2000m"
-ML_OPTIONS="--minheap 1800M --maxheap 1800M"

@@ -15,7 +15,7 @@ object Dependencies {
   val PLAY_SWAGGER_GEN_VERSION = "3.1.0"
 
   val LOG4J_VERSION = "2.17.1"
-  val SCALATEST_VERSION = "3.2.5"
+  val SCALATEST_VERSION = "3.2.13"
   val SCALAMOCK_VERSION = "1.16.29"
   val SCALALOGGING_VERSION = "3.9.2"
 
