@@ -17,6 +17,7 @@ jobs:
           git clone --depth 1 https://github.com/isabelle-prover/mirror-isabelle.git isabelle
           isabelle/Admin/init
           isabelle/bin/isabelle components -u findfacts/importer-isabelle-build
+          isabelle/bin/isabelle components -u findfacts/search-jedit
       - uses: actions/cache@v3
         with:
           path: |
@@ -25,4 +26,4 @@ jobs:
             ~/.isabelle/contrib
             ~/.isabelle/heaps
           key: ISABELLE_HOME_USER
-      - run: ./sbt -Djdk.util.zip.disableZip64ExtraFieldValidation=true -Dprofiles=memory,loader "project search-jedit" assembly "project findfacts" it:test
+      - run: ./sbt -Djdk.util.zip.disableZip64ExtraFieldValidation=true -Dprofiles=memory,loader "project findfacts" it:test
