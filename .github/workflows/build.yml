@@ -16,7 +16,7 @@ jobs:
       - run: |
           git clone --depth 1 https://github.com/isabelle-prover/mirror-isabelle.git isabelle
           isabelle/Admin/init
-          isabelle/bin/isabelle components -u findfacts/importer-base-build
+          isabelle/bin/isabelle components -u findfacts/importer-isabelle-build
       - uses: actions/cache@v3
         with:
           path: |
