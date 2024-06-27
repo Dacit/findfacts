@@ -2,8 +2,6 @@
   <img title="FindFacts" src="search-webapp/public/images/android-chrome-384x384.png" width="200px" />
 </p>
 
-[![CircleCI](https://circleci.com/gh/qaware/findfacts/tree/master.svg?style=svg)](https://circleci.com/gh/qaware/findfacts/tree/master)
-
 # findfacts
 Project to make Isabelle and the AFP easily searchable. Structured in:
 - **common**: common modules
@@ -12,8 +10,8 @@ Project to make Isabelle and the AFP easily searchable. Structured in:
 
 ## Usage
 - Requirements: `java 15`
-- Build: `./sbt -Dprofiles=ui,loader clean compile test it:test`
-- Preparation: Initialize git submodules (`git submodule init && git submodule update`)
+- Build: `./sbt -Dprofiles=ui,loader clean compile assembly test it:test`
+- Preparation: Install Isabelle, add importer component via `isabelle components -u importer-isabelle-build`
 
 ### Synonyms tool
 ```shell
@@ -45,7 +43,7 @@ Build and publish docker image:
 ./sbt "project search-webapp" "docker:publish"
 ```
 
-For deployment, see the [deployment repo](https://github.com/qaware/findfacts-deployment).
+For deployment, see the [deployment repo](https://github.com/Dacit/findfacts-deployment).
 
 ## Code style
 This project uses the [databricks style guide](https://github.com/databricks/scala-style-guide) with some changes:
