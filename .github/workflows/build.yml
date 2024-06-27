@@ -28,5 +28,5 @@ jobs:
             ~/.isabelle/heaps
           key: ISABELLE_HOME_USER
       - run: |
-          export PATH="$PATH:$(pwd)/isabelle/bin/isabelle"
+          export PATH="$PATH:$(pwd)/isabelle/bin"
           ./sbt -Djdk.util.zip.disableZip64ExtraFieldValidation=true -Dprofiles=memory,loader "project findfacts" it:test
