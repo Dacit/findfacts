@@ -213,6 +213,16 @@ lazy val `search-webapp` = project
   .disablePlugins(PlayLogback)
   .dependsOn(`search-core`, `search-webapp-ui`)
 
+// jEdit integration
+lazy val `search-jedit-base` = project
+  .settings(
+    assemblySettings,
+    publish / skip := true,
+    assembly / assemblyOutputPath := baseDirectory.value / ".." / "search-jedit" / "isa-lib" / "findfacts-jedit-base.jar",
+  )
+  .aggregate(`importer-isabelle-base`)
+  .dependsOn(`search-core`)
+
 // Elm ui
 lazy val `search-webapp-ui` = project
   .settings(publish / skip := true)

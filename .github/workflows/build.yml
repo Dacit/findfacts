@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: 'devel'
-      - run: ./sbt -Djdk.util.zip.disableZip64ExtraFieldValidation=true "project importer-isabelle-base" assembly
+      - run: ./sbt -Dgraal.CompilationFailureAction=Silent -Djdk.util.zip.disableZip64ExtraFieldValidation=true "project importer-isabelle-base" assembly "project search-jedit-base" assembly
       - run: |
           git clone --depth 1 https://github.com/isabelle-prover/mirror-isabelle.git isabelle
           isabelle/Admin/init
@@ -31,4 +31,4 @@ jobs:
           key: ISABELLE_HOME_USER
       - run: |
           export PATH="$PATH:$(pwd)/isabelle/bin"
-          ./sbt -Djdk.util.zip.disableZip64ExtraFieldValidation=true -Dprofiles=memory,loader "project findfacts" it:test
+          ./sbt -Dgraal.CompilationFailureAction=Silent -Djdk.util.zip.disableZip64ExtraFieldValidation=true -Dprofiles=memory,loader "project findfacts" it:test
