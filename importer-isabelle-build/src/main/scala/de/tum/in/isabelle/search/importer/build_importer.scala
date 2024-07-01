@@ -202,7 +202,7 @@ Usage: isabelle build_importer [OPTIONS] SESSIONS...
         val store = Store(options)
 
         // Import
-        val session_names = sessions_structure.build_selection(selection).filter(_ != Thy_Header.PURE)
+        val session_names = sessions_structure.build_topological_order.filter(_ != Thy_Header.PURE)
         session_names.map(session_name => Future.fork {
           progress.echo("Importing session " + session_name)
           import_session(session_name, afp_link, index_name, store, deps, importer_module, progress, verbose)
