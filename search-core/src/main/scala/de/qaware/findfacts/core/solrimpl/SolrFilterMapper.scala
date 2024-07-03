@@ -91,7 +91,13 @@ class SolrFilterMapper {
         (f1 +: f2 +: fn).map(mapFilter).toList.sequence.map(fs => s"(${fs.mkString(OR)})")
       case And(f1, f2, fn @ _*) =>
         (f1 +: f2 +: fn).map(mapFilter).toList.sequence.map(fs => s"(${fs.mkString(AND)})")
-      case t: Term => Success(escapeTerm(t))
+      case t: Term =>
+        if (t.inner.contains("*")) { // * does not work with whitespace
+          if (t.inner.matches(".*\\S+\\s+\\S+.*")) {
+            val parts = t.inner.split("\\s+").toList.filterNot(_.isBlank)
+            mapFilter(Or(Term(parts(0)), Term(parts(1)), parts.drop(2).map(Term(_)): _*))
+          } else Success(escapeTerm(Term(t.inner.trim)))
+        } else Success(escapeTerm(t))
       case e: Exact => Success(escapeExact(e))
       case InRange(from, to) => Success(s"[$from TO $to]")
       case InResult(ofField, query) => innerQuery(ofField, query, anyInResult)
