@@ -6,8 +6,8 @@ object Dependencies {
 
   val SOLR_VERSION = "8.11.1"
   val PLAY_VERSION = "2.8.7"
-  val JACKSON_VERSION = "2.12.6"
-  val JACKSON_DATABIND_VERSION = "2.12.6.1"
+  val JACKSON_VERSION = "2.12.7"
+  val JACKSON_DATABIND_VERSION = "2.12.7.2"
 
   val CIRCE_VERSION = "0.12.0"
   val PLAY_CIRCE_VERSION = "2812.0"
