@@ -40,11 +40,6 @@ Run:
 ./sbt "project search-webapp" run
 ```
 
-Build and publish docker image:
-```shell
-./sbt "project search-webapp" "docker:publish"
-```
-
 For deployment, see the [deployment repo](https://github.com/qaware/findfacts-deployment).
 
 ## Code style
